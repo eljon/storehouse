@@ -4,215 +4,227 @@
   <meta charset="utf-8">
   <title>Kalayaan Ward Bishop's Storehouse</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#134d38">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23134d38'/%3E%3Cpath d='M4 10 L12 4.5 L20 10' fill='none' stroke='%23e8b24a' stroke-width='1.8' stroke-linejoin='round' stroke-linecap='round'/%3E%3Crect x='6' y='10' width='12' height='9.5' rx='1' fill='none' stroke='%23e8b24a' stroke-width='1.8'/%3E%3Cpath d='M10 19.5 v-4.5 h4 v4.5' fill='none' stroke='%23e8b24a' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#011D4D">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23034078'/%3E%3Cg fill='none' stroke='%23E4DFDA' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 8l-8-4-8 4 8 4 8-4z'/%3E%3Cpath d='M4 8v8l8 4 8-4V8'/%3E%3Cpath d='M12 12v8'/%3E%3C/g%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --green: #134d38; --green-2: #1c6a4c; --green-tint: #e6efe9;
-      --accent: #e8b24a; --accent-deep: #c8912b;
-      --bg: #f5f3ed; --card: #ffffff; --line: #e7e2d8;
-      --text: #1f2421; --muted: #6d716a; --muted-2: #9a978f;
-      --danger: #c0453b; --danger-tint: #f8e2df;
-      --warn: #c9821a; --warn-tint: #fbeccf;
-      --ok: #2f8a5f; --ok-tint: #e2f0e8;
-      --r: 16px; --r-sm: 12px;
-      --shadow: 0 1px 2px rgba(21,40,32,.05), 0 8px 24px rgba(21,40,32,.06);
-      --shadow-lg: 0 12px 34px rgba(21,40,32,.14);
+      --navy: #034078; --navy-deep: #011D4D; --navy-hover: #023460;
+      --teal: #1282A2; --sand: #E4DFDA; --brown: #63372C;
+      --bg: #f5f6f8; --surface: #ffffff;
+      --ink: #0d1b2a; --muted: #5b6675; --muted-2: #8a94a3; --line: #e7eaee;
+      --ok: #0f7d97; --ok-bg: #e4f1f4;
+      --warn: #9a662f; --warn-bg: #f3ebdf;
+      --danger: #b23b3b; --danger-bg: #f8e7e5;
+      --r: 16px; --r-sm: 11px; --r-xs: 9px;
+      --sh-sm: 0 1px 2px rgba(13,27,42,.05);
+      --sh: 0 6px 22px rgba(13,27,42,.07);
+      --sh-lg: 0 18px 44px rgba(13,27,42,.16);
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { overflow-x: hidden; }
-    body { margin: 0; background: var(--bg); color: var(--text);
-      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      font-size: 15px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+    body { margin: 0; background: var(--bg); color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 15px; line-height: 1.45; -webkit-font-smoothing: antialiased; letter-spacing: -0.01em; }
+    svg { display: block; }
 
-    /* header */
-    header { background: radial-gradient(120% 120% at 100% 0%, #1c6a4c 0%, #134d38 55%);
-      color: #fff; padding: 18px 18px 34px; border-radius: 0 0 24px 24px;
-      position: relative; z-index: 5; box-shadow: 0 6px 20px rgba(19,77,56,.22); }
-    header .top { display:flex; align-items:center; gap:12px; max-width: 720px; margin: 0 auto; }
-    header .mark { width: 42px; height: 42px; border-radius: 12px;
-      background: linear-gradient(160deg, #f0c063, #e0a13a); display:flex; align-items:center; justify-content:center; flex:none;
-      box-shadow: 0 4px 12px rgba(0,0,0,.18); }
-    header .mark svg { width: 26px; height: 26px; display:block; }
-    header h1 { font-size: 16.5px; margin: 0; font-weight: 800; letter-spacing:-.2px; }
-    header p { margin: 2px 0 0; font-size: 12px; opacity: .82; font-weight: 500; }
-    header .gear { margin-left:auto; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.2);
-      color:#fff; width:38px; height:38px; border-radius:11px; font-size:17px; cursor:pointer; flex:none; }
-    header .gear:active { transform: scale(.94); }
+    /* ===== sticky app bar (brand + segmented nav) ===== */
+    .appbar { position: sticky; top: 0; z-index: 40;
+      background: rgba(255,255,255,.82); backdrop-filter: saturate(180%) blur(16px);
+      -webkit-backdrop-filter: saturate(180%) blur(16px); border-bottom: 1px solid var(--line); }
+    .appbar-row { max-width: 940px; margin: 0 auto; padding: 12px 20px 0; display:flex; align-items:center; gap:12px; }
+    .brand { display:flex; align-items:center; gap:11px; }
+    .brand .logo { width:38px; height:38px; border-radius:11px; background: var(--navy); display:grid; place-items:center; flex:none;
+      box-shadow: 0 3px 10px rgba(3,64,120,.28); }
+    .brand .logo svg { width:22px; height:22px; }
+    .brand h1 { font-size:16px; margin:0; font-weight:700; letter-spacing:-.02em; color:var(--ink); }
+    .brand p { font-size:12px; margin:1px 0 0; color:var(--muted); font-weight:500; }
+    .gear { margin-left:auto; width:38px; height:38px; border-radius:11px; border:1px solid var(--line);
+      background:#fff; color:var(--muted); cursor:pointer; display:grid; place-items:center; flex:none; transition:.15s; }
+    .gear:hover { color:var(--navy); border-color:#d4dae1; }
+    .gear svg { width:18px; height:18px; }
 
-    /* KPI dashboard */
-    .kpis { display:flex; gap:10px; overflow-x:auto; padding: 0 14px 8px; margin: -22px auto 6px;
-      max-width: 744px; scrollbar-width:none; scroll-snap-type: x proximity;
-      position: relative; z-index: 6; }
-    .kpis::-webkit-scrollbar { display:none; }
-    .kpi { flex:none; min-width: 138px; display:flex; align-items:center; gap:11px; background:var(--card);
-      border:1px solid var(--line); border-radius: var(--r); padding: 12px 13px; box-shadow: var(--shadow);
-      position:relative; scroll-snap-align: start; }
-    .kpi-ico { width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center;
-      background: var(--green-tint); font-size:19px; flex:none; }
-    .kpi-val { font-size:22px; font-weight:800; line-height:1; letter-spacing:-.6px; }
-    .kpi-lab { font-size:11px; color:var(--muted); margin-top:3px; font-weight:600; white-space:nowrap; }
-    .kpi.clickable { cursor:pointer; transition: transform .08s ease; }
-    .kpi.clickable:active { transform: translateY(1px) scale(.99); }
-    .kpi-go { position:absolute; right:11px; top:11px; color:var(--muted-2); font-weight:800; font-size:15px; }
-    .kpi.tone-warn .kpi-ico { background:var(--warn-tint); } .kpi.tone-warn .kpi-val { color:var(--warn); }
-    .kpi.tone-out  .kpi-ico { background:var(--danger-tint); } .kpi.tone-out .kpi-val { color:var(--danger); }
-    .kpi.active { outline: 2px solid var(--green); outline-offset: -1px; }
-    .kpi.active .kpi-go { color: var(--green); }
+    nav.segmented { max-width: 940px; margin: 0 auto; padding: 10px 16px 12px; display:flex; gap:4px; }
+    nav.segmented button { flex:1; display:flex; align-items:center; justify-content:center; gap:7px; padding: 9px 8px;
+      border:0; background:transparent; border-radius: var(--r-xs); font-family:inherit; font-size:13.5px; font-weight:500;
+      color:var(--muted); cursor:pointer; transition: background .14s, color .14s; white-space:nowrap; }
+    nav.segmented button svg { width:17px; height:17px; }
+    nav.segmented button:hover { background: rgba(3,64,120,.06); color: var(--ink); }
+    nav.segmented button.active { background: var(--navy); color:#fff; font-weight:600; box-shadow: 0 4px 12px rgba(3,64,120,.24); }
 
-    /* tab bar */
-    .tabbar { display:flex; gap:6px; background:var(--card); border:1px solid var(--line);
-      border-radius: var(--r); padding:6px; margin: 8px auto 4px; max-width: 720px; box-shadow: var(--shadow); }
-    .tabbar { margin-left:14px; margin-right:14px; }
-    @media (min-width: 745px) { .tabbar { margin-left:auto; margin-right:auto; } }
-    .tabbar button { flex:1; display:flex; align-items:center; justify-content:center; gap:8px; border:0;
-      background:none; padding: 11px 8px; border-radius: var(--r-sm); font-weight:600; font-size:13px;
-      color:var(--muted); cursor:pointer; font-family:inherit; transition: background .12s; }
-    .tabbar button .ti { font-size:16px; line-height:1; }
-    .tabbar button.active { background: var(--green); color:#fff; box-shadow: 0 4px 12px rgba(19,77,56,.22); }
-
-    main { padding: 8px 14px 40px; max-width: 720px; margin: 0 auto; }
+    main { max-width: 940px; margin: 0 auto; padding: 22px 20px 60px; }
     .tab { display:none; }
-    .tab.active { display:block; animation: fade .2s ease; }
-    @keyframes fade { from { opacity:0; transform: translateY(5px);} to {opacity:1; transform:none;} }
+    .tab.active { display:block; animation: fade .22s ease; }
+    @keyframes fade { from { opacity:0; transform: translateY(6px);} to {opacity:1; transform:none;} }
 
-    .card { background: var(--card); border:1px solid var(--line); border-radius: var(--r);
-      box-shadow: var(--shadow); padding: 16px; margin-bottom: 14px; }
-    .card h2 { margin: 0 0 12px; font-size: 12.5px; text-transform: uppercase; letter-spacing:.7px; color: var(--muted); font-weight:700; }
+    .section-label { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted-2);
+      font-weight: 700; margin: 2px 2px 12px; }
 
-    label { display:block; font-size: 12px; font-weight:600; color: var(--muted); margin: 0 0 6px; }
-    input, select, textarea { width:100%; padding: 12px 13px; border:1px solid var(--line); border-radius: var(--r-sm);
-      font-size: 15px; background:#fff; color: var(--text); font-family: inherit; min-height: 46px; }
-    input:focus, select:focus, textarea:focus { outline:none; border-color: var(--green-2); box-shadow: 0 0 0 3px rgba(28,106,76,.14); }
-    textarea { min-height: 62px; resize: vertical; }
-    .field { margin-bottom: 13px; }
-    .row { display:flex; gap:11px; } .row > * { flex:1; }
-    .hint { font-size: 11.5px; color: var(--muted-2); margin-top: 5px; }
+    /* ===== KPI dashboard ===== */
+    .kpis { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom: 24px; }
+    .kpi { background: var(--surface); border:1px solid var(--line); border-radius: var(--r); padding: 16px 17px;
+      display:flex; flex-direction:column; gap:14px; box-shadow: var(--sh-sm); position:relative; }
+    .kpi-top { display:flex; align-items:center; justify-content:space-between; }
+    .kpi-ico { width:36px; height:36px; border-radius:10px; background:var(--bg); display:grid; place-items:center; color:var(--navy); }
+    .kpi-ico svg { width:19px; height:19px; }
+    .kpi-chev { color:var(--muted-2); }
+    .kpi-chev svg { width:16px; height:16px; }
+    .kpi-val { font-size:30px; font-weight:700; letter-spacing:-.03em; line-height:1; }
+    .kpi-lab { font-size:13px; color:var(--muted); font-weight:500; margin-top:5px; }
+    .kpi.clickable { cursor:pointer; transition: transform .14s, box-shadow .14s, border-color .14s; }
+    .kpi.clickable:hover { transform: translateY(-2px); box-shadow: var(--sh); border-color:#d5dbe2; }
+    .kpi.clickable:active { transform: translateY(0); }
+    .kpi.active { border-color: var(--navy); box-shadow: 0 0 0 1px var(--navy), var(--sh); }
+    .kpi.active .kpi-chev { color: var(--navy); }
+    .kpi.tone-warn .kpi-ico { background: var(--warn-bg); color: var(--warn); }
+    .kpi.tone-warn .kpi-val { color: var(--warn); }
+    .kpi.tone-danger .kpi-ico { background: var(--danger-bg); color: var(--danger); }
+    .kpi.tone-danger .kpi-val { color: var(--danger); }
 
-    button.primary { background: var(--green); color:#fff; border:0; padding: 14px 16px; border-radius: var(--r-sm);
-      font-size: 15px; font-weight: 700; width:100%; cursor:pointer; font-family:inherit;
-      box-shadow: 0 4px 14px rgba(19,77,56,.24); transition: transform .08s; }
+    /* ===== cards / forms ===== */
+    .card { background: var(--surface); border:1px solid var(--line); border-radius: var(--r);
+      box-shadow: var(--sh-sm); padding: 22px; margin: 0 auto 16px; max-width: 620px; }
+    .card h2 { margin: 0 0 18px; font-size: 17px; font-weight: 700; letter-spacing:-.02em; }
+    .card h2 span { display:block; font-size:12.5px; font-weight:500; color:var(--muted); margin-top:3px; letter-spacing:0; }
+
+    label { display:block; font-size: 12.5px; font-weight:600; color: var(--ink); margin: 0 0 7px; }
+    input, select, textarea { width:100%; padding: 12px 14px; border:1px solid var(--line); border-radius: var(--r-sm);
+      font-size: 15px; background:#fff; color: var(--ink); font-family: inherit; min-height: 46px; transition: border-color .12s, box-shadow .12s; }
+    input::placeholder, textarea::placeholder { color: var(--muted-2); }
+    input:focus, select:focus, textarea:focus { outline:none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(3,64,120,.13); }
+    textarea { min-height: 64px; resize: vertical; }
+    .field { margin-bottom: 15px; }
+    .row { display:flex; gap:12px; } .row > * { flex:1; }
+    .hint { font-size: 11.5px; color: var(--muted-2); margin-top: 6px; }
+    hr.soft { border:0; border-top:1px solid var(--line); margin: 18px 0; }
+
+    button.primary { background: var(--navy); color:#fff; border:0; padding: 13px 18px; border-radius: var(--r-sm);
+      font-size: 15px; font-weight: 600; width:100%; cursor:pointer; font-family:inherit; letter-spacing:-.01em;
+      box-shadow: 0 4px 14px rgba(3,64,120,.24); transition: background .14s, transform .08s; }
+    button.primary:hover { background: var(--navy-hover); }
     button.primary:active { transform: translateY(1px); }
-    button.primary[disabled] { opacity:.55; cursor: default; box-shadow:none; }
-    button.ghost { background:#fff; color: var(--green); border:1px solid var(--green-2);
-      padding: 11px 13px; border-radius: var(--r-sm); font-weight:600; cursor:pointer; font-size: 13.5px; font-family:inherit; }
-    button.link { background:none; border:0; color: var(--danger); font-weight:600; cursor:pointer; font-size: 13px; padding:8px; }
+    button.primary[disabled] { opacity:.5; cursor: default; box-shadow:none; }
+    button.ghost { background:#fff; color: var(--navy); border:1px solid var(--line);
+      padding: 11px 14px; border-radius: var(--r-sm); font-weight:600; cursor:pointer; font-size: 13.5px; font-family:inherit; transition:.14s; }
+    button.ghost:hover { border-color: var(--navy); }
+    button.linkbtn { background:none; border:0; color: var(--danger); font-weight:600; cursor:pointer; font-size: 13px; padding:8px; }
 
-    .search { display:flex; gap:9px; margin-bottom: 12px; }
-    .search input { flex: 2; }
-    .search select { flex: 1.2; }
+    .toolbar { display:flex; gap:10px; margin-bottom: 16px; }
+    .toolbar input { flex: 2; }
+    .toolbar select { flex: 1.1; }
 
-    .banner { display:flex; align-items:center; gap:8px; background: var(--green-tint); border:1px solid #d3e3d9;
-      color: var(--green); border-radius: var(--r-sm); padding: 9px 12px; margin-bottom: 12px; font-size: 13px; font-weight:600; }
-    .banner button { margin-left:auto; background:#fff; border:1px solid #cfe0d6; color:var(--green);
-      border-radius:8px; padding:5px 10px; font-weight:700; font-size:12px; cursor:pointer; }
+    .banner { display:flex; align-items:center; gap:10px; background: var(--surface); border:1px solid var(--navy);
+      color: var(--navy); border-radius: var(--r-sm); padding: 11px 14px; margin-bottom: 16px; font-size: 13.5px; font-weight:600;
+      box-shadow: 0 0 0 1px rgba(3,64,120,.06); }
+    .banner .bx { display:grid; place-items:center; } .banner .bx svg { width:17px; height:17px; }
+    .banner button { margin-left:auto; background:var(--navy); border:0; color:#fff;
+      border-radius:8px; padding:6px 12px; font-weight:600; font-size:12.5px; cursor:pointer; }
 
-    .item { display:flex; align-items:center; gap:12px; padding: 12px 13px; border:1px solid var(--line);
-      border-radius: var(--r-sm); background:#fff; margin-bottom: 9px; box-shadow: var(--shadow); }
+    /* ===== inventory list ===== */
+    .list { display:flex; flex-direction:column; gap:10px; }
+    .item { display:flex; align-items:center; gap:14px; padding: 15px 17px; border:1px solid var(--line);
+      border-radius: var(--r); background:#fff; box-shadow: var(--sh-sm); transition: border-color .12s, box-shadow .12s; }
+    .item:hover { border-color:#d5dbe2; box-shadow: var(--sh); }
     .item .meta { flex:1; min-width:0; }
-    .item .name { font-weight:700; font-size: 14.5px; letter-spacing:-.1px; }
-    .item .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .item .badges { margin-top:5px; display:flex; flex-wrap:wrap; gap:5px; }
+    .item .name { font-weight:600; font-size: 15px; letter-spacing:-.01em; }
+    .item .sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+    .item .tags { margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; }
     .qty { text-align:right; flex:none; }
-    .qty b { font-size: 18px; font-weight:800; letter-spacing:-.5px; }
-    .qty .u { font-size: 11px; color: var(--muted); }
-    .pill { font-size: 10px; font-weight:800; padding: 3px 8px; border-radius: 20px; display:inline-flex; align-items:center; gap:3px; letter-spacing:.3px; }
-    .pill.low { background: var(--warn-tint); color: var(--warn); }
-    .pill.out { background: var(--danger-tint); color: var(--danger); }
-    .pill.ok  { background: var(--ok-tint); color: var(--ok); }
-    .pill.exp-near { background: var(--warn-tint); color: var(--warn); }
-    .pill.exp-out  { background: var(--danger-tint); color: var(--danger); }
-    .exp-ok { font-size: 11px; color: var(--muted-2); font-weight:600; }
+    .qty b { font-size: 21px; font-weight:700; letter-spacing:-.03em; }
+    .qty .u { font-size: 12px; color: var(--muted); font-weight:500; }
+    .tag { font-size: 11px; font-weight:600; padding: 4px 9px; border-radius: 999px; display:inline-flex; align-items:center; gap:4px; letter-spacing:-.005em; }
+    .tag svg { width:11px; height:11px; }
+    .tag.ok { background: var(--ok-bg); color: var(--ok); }
+    .tag.warn { background: var(--warn-bg); color: var(--warn); }
+    .tag.danger { background: var(--danger-bg); color: var(--danger); }
+    .tag.muted { background: #eef0f3; color: var(--muted); }
 
-    .cat-head { font-size: 11.5px; font-weight:800; text-transform:uppercase; letter-spacing:.7px;
-      color: var(--green); margin: 16px 2px 9px; display:flex; align-items:center; gap:9px; }
+    .cat-head { font-size: 12px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+      color: var(--navy-deep); margin: 22px 2px 12px; display:flex; align-items:center; gap:10px; }
+    .cat-head:first-child { margin-top: 4px; }
     .cat-head::after { content:""; flex:1; height:1px; background: var(--line); }
 
     /* output line */
-    .lineitem { display:flex; gap:9px; align-items:flex-start; margin-bottom:9px; }
+    .lineitem { display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; }
     .lineitem .sel { flex: 2.4; }
     .lineitem .num { flex: 1; }
     .lineitem .rm { flex:none; padding-top:5px; }
 
     /* combobox */
     .combo { position: relative; }
-    .combo-input { width:100%; padding-right: 32px; }
-    .combo-clear { position:absolute; right:11px; top:14px; color:var(--muted-2); cursor:pointer; font-size:14px; display:none; line-height:1; }
+    .combo-input { width:100%; padding-right: 34px; }
+    .combo-clear { position:absolute; right:12px; top:14px; color:var(--muted-2); cursor:pointer; display:none; }
+    .combo-clear svg { width:15px; height:15px; }
     .combo.has-value .combo-clear { display:block; }
-    .combo-pop { position:absolute; z-index:40; left:0; right:0; top:calc(100% + 5px); background:#fff;
-      border:1px solid var(--line); border-radius: var(--r-sm); box-shadow: var(--shadow-lg);
-      max-height:280px; overflow-y:auto; display:none; }
+    .combo-pop { position:absolute; z-index:50; left:0; right:0; top:calc(100% + 6px); background:#fff;
+      border:1px solid var(--line); border-radius: var(--r-sm); box-shadow: var(--sh-lg); max-height:290px; overflow-y:auto; display:none; }
     .combo-pop.open { display:block; }
-    .combo-row { padding:11px 13px; display:flex; gap:10px; align-items:center; cursor:pointer; border-bottom:1px solid var(--line); }
+    .combo-row { padding:12px 14px; display:flex; gap:10px; align-items:center; cursor:pointer; border-bottom:1px solid var(--line); }
     .combo-row:last-child { border-bottom:0; }
-    .combo-row.active, .combo-row:hover { background:#f2efe8; }
+    .combo-row.active, .combo-row:hover { background:#f4f6f8; }
     .combo-row .cr-name { font-weight:600; font-size:14px; }
     .combo-row .cr-sub { font-size:11.5px; color:var(--muted); }
-    .combo-row .cr-qty { font-size:12px; color:var(--green); font-weight:800; white-space:nowrap; }
+    .combo-row .cr-qty { font-size:12px; color:var(--navy); font-weight:700; white-space:nowrap; }
     .combo-row .cr-qty.zero { color:var(--danger); }
-    .combo-row.new { color:var(--green-2); font-weight:700; }
+    .combo-row.new { color:var(--navy); font-weight:600; }
     .combo-empty { padding:16px; color:var(--muted); font-size:13px; text-align:center; }
 
-    /* chips */
-    .chips { display:flex; gap:8px; margin-bottom: 12px; }
-    .chip { flex:1; text-align:center; padding:10px 6px; border-radius: var(--r-sm); border:1px solid var(--line);
-      background:#fff; font-weight:600; font-size:12.5px; color:var(--muted); cursor:pointer; box-shadow: var(--shadow); }
-    .chip.active { background:var(--green); color:#fff; border-color:var(--green); }
-    .chip b { font-weight:800; }
-
     /* history */
-    .hist-date { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.6px;
-      color: var(--green); margin: 16px 2px 6px; }
-    .tx { font-size: 13px; padding: 11px 2px; border-bottom:1px solid var(--line); display:flex; gap:11px; }
-    .tx .badge { font-size:10px; font-weight:800; padding:3px 8px; border-radius:7px; height:fit-content; letter-spacing:.3px; }
-    .tx .badge.IN { background:var(--ok-tint); color: var(--ok); }
-    .tx .badge.OUT { background:var(--danger-tint); color: var(--danger); }
+    .chips { display:flex; gap:9px; margin-bottom: 16px; }
+    .chip { flex:1; text-align:center; padding:11px 6px; border-radius: var(--r-sm); border:1px solid var(--line);
+      background:#fff; font-weight:600; font-size:12.5px; color:var(--muted); cursor:pointer; box-shadow: var(--sh-sm); transition:.14s; }
+    .chip:hover { border-color:#d5dbe2; }
+    .chip.active { background:var(--navy); color:#fff; border-color:var(--navy); box-shadow: 0 4px 12px rgba(3,64,120,.2); }
+    .chip b { font-weight:800; }
+    .hist-date { font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
+      color: var(--navy-deep); margin: 20px 2px 8px; }
+    .tx { font-size: 13.5px; padding: 13px 2px; border-bottom:1px solid var(--line); display:flex; gap:12px; }
+    .tx .badge { font-size:10px; font-weight:700; padding:4px 9px; border-radius:7px; height:fit-content; letter-spacing:.02em; }
+    .tx .badge.IN { background:var(--ok-bg); color: var(--ok); }
+    .tx .badge.OUT { background:var(--danger-bg); color: var(--danger); }
     .tx .d { flex:1; min-width:0; }
-    .tx .d .t { font-weight:700; }
-    .tx .d .s { color: var(--muted); font-size: 11.5px; margin-top:1px; }
+    .tx .d .t { font-weight:600; }
+    .tx .d .s { color: var(--muted); font-size: 12px; margin-top:2px; }
 
-    .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(160px);
-      background: #1a2320; color:#fff; padding: 13px 20px; border-radius: 13px;
-      box-shadow: var(--shadow-lg); font-size: 14px; font-weight:600; z-index: 100;
-      transition: transform .3s cubic-bezier(.2,.9,.3,1); max-width: 90%; text-align:center; }
+    .toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(180px);
+      background: var(--navy-deep); color:#fff; padding: 14px 22px; border-radius: 13px;
+      box-shadow: var(--sh-lg); font-size: 14px; font-weight:600; z-index: 100;
+      transition: transform .32s cubic-bezier(.2,.9,.3,1); max-width: 90%; text-align:center; }
     .toast.show { transform: translateX(-50%) translateY(0); }
     .toast.err { background: var(--danger); }
-    .toast.ok  { background: var(--green); }
+    .toast.ok  { background: var(--navy); }
 
-    .empty { text-align:center; color: var(--muted); padding: 34px 12px; font-size: 14px; }
-    .spinner { display:inline-block; width:18px; height:18px; border:3px solid rgba(255,255,255,.35);
+    .empty { text-align:center; color: var(--muted); padding: 40px 14px; font-size: 14px;
+      background:#fff; border:1px solid var(--line); border-radius: var(--r); }
+    .spinner { display:inline-block; width:18px; height:18px; border:2.5px solid rgba(255,255,255,.35);
       border-top-color:#fff; border-radius:50%; animation: spin .7s linear infinite; vertical-align:-4px; }
     @keyframes spin { to { transform: rotate(360deg);} }
-    .loading { text-align:center; padding: 44px; color: var(--muted); }
-    hr.soft { border:0; border-top:1px solid var(--line); margin: 14px 0; }
+    .loading { text-align:center; padding: 50px; color: var(--muted); }
 
     /* overlay */
-    .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 200; display:none;
-      align-items: flex-start; justify-content: center; overflow-y:auto; padding: 26px 16px; }
+    .overlay { position: fixed; inset: 0; background: rgba(13,27,42,.35); backdrop-filter: blur(4px); z-index: 200; display:none;
+      align-items: flex-start; justify-content: center; overflow-y:auto; padding: 40px 16px; }
     .overlay.show { display:flex; }
-    .sheet { background: var(--card); border:1px solid var(--line); border-radius: 20px;
-      box-shadow: var(--shadow-lg); padding: 24px; max-width: 460px; width:100%; }
-    .sheet .logo { width:52px; height:52px; border-radius:14px; background:linear-gradient(160deg,#f0c063,#e0a13a);
-      display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
+    .sheet { background: var(--surface); border-radius: 20px; box-shadow: var(--sh-lg); padding: 26px; max-width: 460px; width:100%; }
+    .sheet .logo { width:54px; height:54px; border-radius:15px; background:var(--navy); display:grid; place-items:center; margin-bottom:18px; }
     .sheet .logo svg { width:30px; height:30px; }
-    .sheet h2 { margin: 0 0 6px; font-size: 20px; letter-spacing:-.3px; }
-    .sheet p { margin: 0 0 16px; color: var(--muted); font-size: 13.5px; }
-    .sheet ol { margin: 0 0 14px; padding-left: 20px; color: var(--muted); font-size: 12.5px; }
-    .sheet code { background:#f0ede6; padding:1px 5px; border-radius:5px; font-size:12px; }
-    .statusline { font-size: 12.5px; margin-top: 10px; min-height: 18px; }
+    .sheet h2 { margin: 0 0 7px; font-size: 21px; letter-spacing:-.03em; font-weight:700; }
+    .sheet p { margin: 0 0 18px; color: var(--muted); font-size: 13.5px; }
+    .sheet ol { margin: 4px 0 0; padding-left: 20px; color: var(--muted); font-size: 12.5px; line-height:1.7; }
+    .sheet code { background:#eef0f3; padding:1px 6px; border-radius:5px; font-size:12px; }
+    .statusline { font-size: 12.5px; margin-top: 12px; min-height: 18px; }
     .statusline.ok { color: var(--ok); } .statusline.err { color: var(--danger); }
 
-    /* mobile: bottom tab bar */
-    @media (max-width: 680px) {
-      .tabbar { position: fixed; left: 10px; right: 10px; bottom: 10px; bottom: calc(10px + env(safe-area-inset-bottom));
-        margin: 0; z-index: 60; border-radius: 20px; box-shadow: var(--shadow-lg); }
-      .tabbar button { flex-direction: column; gap: 3px; font-size: 10.5px; padding: 7px 3px; }
-      .tabbar button .ti { font-size: 20px; }
-      main { padding-bottom: 104px; }
-      .toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
+    @media (max-width: 560px) {
+      .appbar-row { padding-top: 11px; }
+      nav.segmented button { flex-direction: column; gap: 4px; font-size: 11px; padding: 8px 4px; }
+      nav.segmented button svg { width: 19px; height: 19px; }
+      main { padding: 18px 15px 60px; }
+      .card { padding: 18px; }
+      .kpis { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .kpi-val { font-size: 27px; }
     }
   </style>
 </head>
@@ -220,7 +232,7 @@
   <!-- ============ CONNECT / SETTINGS OVERLAY ============ -->
   <div class="overlay" id="overlay">
     <div class="sheet">
-      <div class="logo"><svg viewBox="0 0 24 24"><path d="M4 10 L12 4.5 L20 10" fill="none" stroke="#134d38" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><rect x="6" y="10" width="12" height="9.5" rx="1" fill="none" stroke="#134d38" stroke-width="1.8"/><path d="M10 19.5 v-4.5 h4 v4.5" fill="none" stroke="#134d38" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+      <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#E4DFDA" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 8l-8-4-8 4 8 4 8-4z"/><path d="M4 8v8l8 4 8-4V8"/><path d="M12 12v8"/></svg></div>
       <h2 id="ov_title">Connect to your storehouse</h2>
       <p id="ov_desc">Paste the Google Apps Script <b>Web app URL</b> for your storehouse sheet.
         It ends with <code>/exec</code>. You only need to do this once on this device.</p>
@@ -235,47 +247,48 @@
         <li><b>Deploy → New deployment → Web app</b> (Execute as <b>Me</b>, Access <b>Anyone</b>).</li>
         <li>Copy the <b>Web app URL</b> and paste it above.</li>
       </ol>
-      <button class="link" id="ov_cancel" style="color:var(--muted);display:none" onclick="closeOverlay()">Cancel</button>
+      <div style="text-align:center"><button class="linkbtn" id="ov_cancel" style="color:var(--muted);display:none" onclick="closeOverlay()">Cancel</button></div>
     </div>
   </div>
 
   <!-- ============ APP ============ -->
   <div id="app" style="display:none">
-    <header>
-      <div class="top">
-        <div class="mark"><svg viewBox="0 0 24 24"><path d="M4 10 L12 4.5 L20 10" fill="none" stroke="#134d38" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><rect x="6" y="10" width="12" height="9.5" rx="1" fill="none" stroke="#134d38" stroke-width="1.8"/><path d="M10 19.5 v-4.5 h4 v4.5" fill="none" stroke="#134d38" stroke-width="1.6" stroke-linecap="round"/></svg></div>
-        <div>
-          <h1>Kalayaan Ward</h1>
-          <p>Bishop's Storehouse · Inventory</p>
+    <div class="appbar">
+      <div class="appbar-row">
+        <div class="brand">
+          <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#E4DFDA" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 8l-8-4-8 4 8 4 8-4z"/><path d="M4 8v8l8 4 8-4V8"/><path d="M12 12v8"/></svg></div>
+          <div>
+            <h1>Kalayaan Ward</h1>
+            <p>Bishop's Storehouse · Inventory</p>
+          </div>
         </div>
-        <button class="gear" title="Settings" onclick="openSettings()">&#9881;</button>
+        <button class="gear" title="Settings" onclick="openSettings()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       </div>
-    </header>
-
-    <div class="kpis" id="stats"></div>
-
-    <nav class="tabbar">
-      <button data-tab="check" class="active" onclick="switchTab('check')"><span class="ti">📦</span><span>Inventory</span></button>
-      <button data-tab="out" onclick="switchTab('out')"><span class="ti">📤</span><span>Output</span></button>
-      <button data-tab="in" onclick="switchTab('in')"><span class="ti">📥</span><span>Input</span></button>
-      <button data-tab="history" onclick="switchTab('history')"><span class="ti">🕘</span><span>History</span></button>
-    </nav>
+      <nav class="segmented">
+        <button data-tab="check" class="active" onclick="switchTab('check')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 8l-8-4-8 4 8 4 8-4z"/><path d="M4 8v8l8 4 8-4V8"/></svg><span>Inventory</span></button>
+        <button data-tab="out" onclick="switchTab('out')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M8 7l4-4 4 4"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg><span>Output</span></button>
+        <button data-tab="in" onclick="switchTab('in')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg><span>Input</span></button>
+        <button data-tab="history" onclick="switchTab('history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>History</span></button>
+      </nav>
+    </div>
 
     <main>
       <!-- CHECK INVENTORY -->
       <section id="tab-check" class="tab active">
+        <div class="section-label">Overview</div>
+        <div class="kpis" id="stats"></div>
         <div id="invBanner"></div>
-        <div class="search">
+        <div class="toolbar">
           <input id="q" type="search" placeholder="Search items…" oninput="renderInventory()">
           <select id="catFilter" onchange="renderInventory()"><option value="">All categories</option></select>
         </div>
-        <div id="invList"><div class="loading"><span class="spinner" style="border-color:#ccc;border-top-color:#134d38"></span> Loading…</div></div>
+        <div id="invList"><div class="loading"><span class="spinner" style="border-color:#d5dbe2;border-top-color:#034078"></span> Loading…</div></div>
       </section>
 
       <!-- RECORD OUTPUT -->
       <section id="tab-out" class="tab">
         <div class="card">
-          <h2>Record Output — items taken out</h2>
+          <h2>Record Output<span>Items leaving the storehouse</span></h2>
           <div class="field"><label>Recipient name *</label>
             <input id="o_recipient" placeholder="e.g. Sister Reyes / Elders Quorum"></div>
           <div class="field"><label>Handled by</label>
@@ -294,7 +307,7 @@
       <!-- RECORD INPUT -->
       <section id="tab-in" class="tab">
         <div class="card">
-          <h2>Record Input — items received</h2>
+          <h2>Record Input<span>Items received into the storehouse</span></h2>
           <div class="field"><label>Item * — type to search, or add new</label>
             <div id="i_item_combo"></div></div>
           <div id="newItemFields" style="display:none;">
@@ -317,7 +330,7 @@
           </div>
           <div class="field"><label>Expiry date (optional)</label>
             <input id="i_expiry" type="date">
-            <div class="hint">Sets/updates this item's expiry. Leave blank to keep the current date.</div></div>
+            <div class="hint">Sets or updates this item's expiry. Leave blank to keep the current date.</div></div>
           <div class="field"><label>Handled by</label><input id="i_handled" placeholder="Your name"></div>
           <div class="field"><label>Notes (optional)</label><textarea id="i_notes" placeholder="Remarks"></textarea></div>
           <button class="primary" id="i_submit" onclick="submitInput()">Record Input</button>
@@ -328,14 +341,14 @@
       <section id="tab-history" class="tab">
         <div class="chips">
           <div class="chip active" data-f="ALL" onclick="setHistoryFilter('ALL')">All <b id="c_all">0</b></div>
-          <div class="chip" data-f="OUT" onclick="setHistoryFilter('OUT')">📤 Output <b id="c_out">0</b></div>
-          <div class="chip" data-f="IN" onclick="setHistoryFilter('IN')">📥 Input <b id="c_in">0</b></div>
+          <div class="chip" data-f="OUT" onclick="setHistoryFilter('OUT')">Output <b id="c_out">0</b></div>
+          <div class="chip" data-f="IN" onclick="setHistoryFilter('IN')">Input <b id="c_in">0</b></div>
         </div>
-        <div class="search">
+        <div class="toolbar">
           <input id="histQ" type="search" placeholder="Search item, recipient, source, worker…" oninput="renderHistory()">
-          <button class="ghost" type="button" onclick="loadHistory(true)" style="flex:none">↻</button>
+          <button class="ghost" type="button" onclick="loadHistory(true)" style="flex:none">Refresh</button>
         </div>
-        <div id="histList"><div class="loading"><span class="spinner" style="border-color:#ccc;border-top-color:#134d38"></span> Loading…</div></div>
+        <div id="histList"><div class="loading"><span class="spinner" style="border-color:#d5dbe2;border-top-color:#034078"></span> Loading…</div></div>
       </section>
     </main>
   </div>
@@ -347,10 +360,22 @@
   var DATA = { items: [], categories: [], stats: {} };
   var HISTORY = [];
   var historyFilter = 'ALL';
-  var quickFilter = '';           // '', 'expiry', 'low', 'out'
+  var quickFilter = '';
   var inputCombo = null;
   var busy = false;
   var LS_KEY = 'storehouse_api_url';
+
+  // inline icons
+  var IC = {
+    box:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 8l-8-4-8 4 8 4 8-4z"/><path d="M4 8v8l8 4 8-4V8"/></svg>',
+    clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M19 12l-7 7-7-7"/></svg>',
+    slash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/></svg>',
+    layers:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>',
+    chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+    x:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    clockSm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+  };
 
   /* ---------- connection ---------- */
   function getApiUrl() {
@@ -439,20 +464,20 @@
   /* ---------- tabs ---------- */
   function switchTab(name) {
     document.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
-    document.querySelectorAll('.tabbar button').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === name); });
+    document.querySelectorAll('nav.segmented button').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === name); });
     document.getElementById('tab-' + name).classList.add('active');
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   /* ---------- KPI dashboard ---------- */
   function renderStats() {
     var s = DATA.stats || {};
     var cards = [
-      { ico: '📦', val: s.distinctItems, label: 'Items' },
-      { ico: '⏰', val: s.nearExpiry, label: 'Near expiry', k: 'expiry', tone: 'warn' },
-      { ico: '📉', val: s.lowStock, label: 'Low stock', k: 'low', tone: 'warn' },
-      { ico: '⛔', val: s.outOfStock, label: 'Out of stock', k: 'out', tone: 'out' },
-      { ico: 'Σ', val: s.totalUnits, label: 'Total units' }
+      { ico: IC.box, val: s.distinctItems, label: 'Items' },
+      { ico: IC.clock, val: s.nearExpiry, label: 'Near expiry · ≤3 mo', k: 'expiry', tone: 'warn' },
+      { ico: IC.down, val: s.lowStock, label: 'Low stock', k: 'low', tone: 'warn' },
+      { ico: IC.slash, val: s.outOfStock, label: 'Out of stock', k: 'out', tone: 'danger' },
+      { ico: IC.layers, val: s.totalUnits, label: 'Total units' }
     ];
     document.getElementById('stats').innerHTML = cards.map(kpiCard).join('');
   }
@@ -460,15 +485,13 @@
     var cls = 'kpi' + (t.tone ? ' tone-' + t.tone : '') + (t.k ? ' clickable' : '') + (t.k && quickFilter === t.k ? ' active' : '');
     var attr = t.k ? (' data-kpi="' + t.k + '" onclick="applyQuickFilter(\'' + t.k + '\')"') : '';
     return '<div class="' + cls + '"' + attr + '>' +
-      '<div class="kpi-ico">' + t.ico + '</div>' +
-      '<div><div class="kpi-val">' + (t.val || 0) + '</div><div class="kpi-lab">' + esc(t.label) + '</div></div>' +
-      (t.k ? '<div class="kpi-go">' + (quickFilter === t.k ? '✓' : '›') + '</div>' : '') + '</div>';
+      '<div class="kpi-top"><div class="kpi-ico">' + t.ico + '</div>' +
+      (t.k ? '<div class="kpi-chev">' + IC.chev + '</div>' : '') + '</div>' +
+      '<div><div class="kpi-val">' + (t.val || 0) + '</div><div class="kpi-lab">' + esc(t.label) + '</div></div></div>';
   }
   function applyQuickFilter(k) {
     quickFilter = (quickFilter === k) ? '' : k;
-    renderStats();
-    switchTab('check');
-    renderInventory();
+    renderStats(); switchTab('check'); renderInventory();
   }
 
   /* ---------- inventory ---------- */
@@ -483,22 +506,22 @@
     DATA.categories.forEach(function (c) { var o = document.createElement('option'); o.value = c; dl.appendChild(o); });
   }
   function stockPill(it) {
-    if (it.quantity <= 0) return '<span class="pill out">OUT OF STOCK</span>';
-    if (it.target > 0 && it.quantity < it.target) return '<span class="pill low">LOW STOCK</span>';
-    return '<span class="pill ok">IN STOCK</span>';
+    if (it.quantity <= 0) return '<span class="tag danger">Out of stock</span>';
+    if (it.target > 0 && it.quantity < it.target) return '<span class="tag warn">Low stock</span>';
+    return '<span class="tag ok">In stock</span>';
   }
   function expiryBadge(it) {
     if (!it.expiry) return '';
-    if (it.expStatus === 'expired') return '<span class="pill exp-out">⚠ EXPIRED · ' + esc(it.expiry) + '</span>';
-    if (it.expStatus === 'near') return '<span class="pill exp-near">⏰ ' + it.daysToExpiry + 'd left · ' + esc(it.expiry) + '</span>';
-    return '<span class="exp-ok">Exp ' + esc(it.expiry) + '</span>';
+    if (it.expStatus === 'expired') return '<span class="tag danger">' + IC.clockSm + ' Expired · ' + esc(it.expiry) + '</span>';
+    if (it.expStatus === 'near') return '<span class="tag warn">' + IC.clockSm + ' ' + it.daysToExpiry + 'd left · ' + esc(it.expiry) + '</span>';
+    return '<span class="tag muted">Exp ' + esc(it.expiry) + '</span>';
   }
-  var QF_LABEL = { expiry: '⏰ Near expiry (≤ 3 months)', low: '📉 Low stock items', out: '⛔ Out of stock items' };
+  var QF = { expiry: 'Near expiry · expiring within 3 months', low: 'Low stock items', out: 'Out of stock items' };
   function renderBanner() {
     var b = document.getElementById('invBanner');
     if (!quickFilter) { b.innerHTML = ''; return; }
-    b.innerHTML = '<div class="banner">' + QF_LABEL[quickFilter] +
-      '<button onclick="applyQuickFilter(\'' + quickFilter + '\')">Clear ✕</button></div>';
+    b.innerHTML = '<div class="banner"><span class="bx">' + IC.clockSm + '</span>' + QF[quickFilter] +
+      '<button onclick="applyQuickFilter(\'' + quickFilter + '\')">Clear</button></div>';
   }
   function renderInventory() {
     renderBanner();
@@ -515,24 +538,24 @@
     });
     var box = document.getElementById('invList');
     if (!list.length) { box.innerHTML = '<div class="empty">No items match.</div>'; return; }
-
     var html = '';
     if (quickFilter === 'expiry') {
       list.sort(function (a, b) { return (a.daysToExpiry == null ? 1e9 : a.daysToExpiry) - (b.daysToExpiry == null ? 1e9 : b.daysToExpiry); });
-      list.forEach(function (it) { html += itemRow(it); });
+      html = '<div class="list">' + list.map(itemRow).join('') + '</div>';
     } else {
-      var lastCat = null;
+      var lastCat = null, buf = '';
       list.forEach(function (it) {
-        if (it.category !== lastCat) { html += '<div class="cat-head">' + esc(it.category) + '</div>'; lastCat = it.category; }
-        html += itemRow(it);
+        if (it.category !== lastCat) { if (buf) html += '<div class="list">' + buf + '</div>'; buf = ''; html += '<div class="cat-head">' + esc(it.category) + '</div>'; lastCat = it.category; }
+        buf += itemRow(it);
       });
+      if (buf) html += '<div class="list">' + buf + '</div>';
     }
     box.innerHTML = html;
   }
   function itemRow(it) {
     return '<div class="item"><div class="meta"><div class="name">' + esc(it.item) + '</div>' +
       '<div class="sub">' + esc(it.notes || '') + (it.target ? (' · par ' + it.target) : '') + '</div>' +
-      '<div class="badges">' + stockPill(it) + expiryBadge(it) + '</div></div>' +
+      '<div class="tags">' + stockPill(it) + expiryBadge(it) + '</div></div>' +
       '<div class="qty"><b>' + it.quantity + '</b> <span class="u">' + esc(it.unit || '') + '</span></div></div>';
   }
 
@@ -541,7 +564,7 @@
     var list = DATA.items.map(function (it) {
       return { id: it.id, name: it.item, sub: it.notes || it.category || '', qty: it.quantity, unit: it.unit };
     });
-    if (includeNew) list.unshift({ id: '__new__', name: '➕ Add a NEW item…', isNew: true });
+    if (includeNew) list.unshift({ id: '__new__', name: '＋  Add a new item…', isNew: true });
     return list;
   }
   function makeCombo(opts) {
@@ -550,7 +573,7 @@
     wrap.className = 'combo';
     wrap.innerHTML =
       '<input type="text" class="combo-input" autocomplete="off" spellcheck="false" placeholder="' + (opts.placeholder || 'Search item…') + '">' +
-      '<span class="combo-clear" title="Clear">&#10005;</span><div class="combo-pop"></div>';
+      '<span class="combo-clear" title="Clear">' + IC.x + '</span><div class="combo-pop"></div>';
     var input = wrap.querySelector('.combo-input'), pop = wrap.querySelector('.combo-pop'), clear = wrap.querySelector('.combo-clear');
     var current = [], activeIdx = -1;
     wrap.dataset.value = '';
@@ -614,7 +637,7 @@
     var num = document.createElement('div'); num.className = 'num';
     num.innerHTML = '<input class="ol-qty" type="number" min="1" inputmode="numeric" placeholder="Qty">';
     var rm = document.createElement('div'); rm.className = 'rm';
-    rm.innerHTML = '<button class="link" type="button">&#10005;</button>';
+    rm.innerHTML = '<button class="linkbtn" type="button">Remove</button>';
     rm.querySelector('button').addEventListener('click', function () { div.remove(); });
     div.appendChild(sel); div.appendChild(num); div.appendChild(rm);
     document.getElementById('outLines').appendChild(div);
