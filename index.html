@@ -186,6 +186,30 @@
     .chip:hover { border-color:#d5dbe2; }
     .chip.active { background:var(--navy); color:#fff; border-color:var(--navy); box-shadow: 0 4px 12px rgba(3,64,120,.2); }
     .chip b { font-weight:800; }
+    .chips.sub { margin-top: -6px; }
+
+    /* Bishop's verification */
+    .verify { margin: 2px 0 16px; }
+    .verify-idle { display:flex; align-items:center; gap:11px; flex-wrap:wrap; }
+    .verify-btn { display:inline-flex; align-items:center; gap:7px; }
+    .verify-btn svg { width:15px; height:15px; }
+    .verify-hint { font-size:11.5px; color:var(--muted-2); }
+    .verify-form { border:1px solid var(--line); border-radius: var(--r-sm); padding:14px; background:#fafcfd; }
+    .verify-row { display:flex; gap:9px; margin-top:6px; }
+    .verify-row .verify-input { flex:1; }
+    .verify-row .verify-confirm { width:auto; padding:12px 16px; flex:none; }
+    .verify-msg { font-size:12px; margin-top:9px; min-height:15px; color:var(--muted); }
+    .verify-msg.err { color:var(--danger); }
+    .verify-cancel { margin-top:2px; }
+    .verify-done { display:flex; align-items:center; gap:12px; }
+    .verify-chip { display:inline-flex; align-items:center; gap:6px; background:var(--ok-bg); color:var(--ok);
+      font-weight:700; font-size:12.5px; padding:9px 13px; border-radius:999px; }
+    .verify-chip svg { width:14px; height:14px; }
+    .vtag { font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:999px; display:inline-flex; align-items:center; gap:3px; white-space:nowrap; }
+    .vtag svg { width:11px; height:11px; }
+    .vtag.ok { background:var(--ok-bg); color:var(--ok); }
+    .vtag.muted { background:#eef0f3; color:var(--muted); }
+    .tx .vwrap { flex:none; display:flex; align-items:center; }
     .hist-date { font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
       color: var(--navy-deep); margin: 20px 2px 8px; }
     .tx { font-size: 13.5px; padding: 13px 2px; border-bottom:1px solid var(--line); display:flex; gap:12px; }
@@ -308,6 +332,25 @@
           <hr class="soft">
           <div class="field"><label>Notes (optional)</label>
             <textarea id="o_notes" placeholder="Reason / approval / remarks"></textarea></div>
+          <div class="verify" id="o_verify">
+            <div class="verify-idle">
+              <button type="button" class="ghost verify-btn" onclick="verifyOpen('o')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Bishop's verification</button>
+              <span class="verify-hint">Optional — confirm with the Bishop's password.</span>
+            </div>
+            <div class="verify-form" style="display:none">
+              <label>Bishop's password</label>
+              <div class="verify-row">
+                <input type="password" class="verify-input" id="o_verify_pw" placeholder="Enter password" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();verifyConfirm('o');}">
+                <button type="button" class="primary verify-confirm" onclick="verifyConfirm('o')">Confirm</button>
+              </div>
+              <div class="verify-msg" id="o_verify_msg"></div>
+              <button type="button" class="linkbtn verify-cancel" style="color:var(--muted)" onclick="verifyCancel('o')">Cancel</button>
+            </div>
+            <div class="verify-done" style="display:none">
+              <span class="verify-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Verified by the Bishop</span>
+              <button type="button" class="linkbtn" style="color:var(--muted)" onclick="verifyReset('o')">Undo</button>
+            </div>
+          </div>
           <button class="primary" id="o_submit" onclick="submitOutput()">Record Output</button>
         </div>
       </section>
@@ -341,16 +384,40 @@
             <div class="hint">Sets or updates this item's expiry. Leave blank to keep the current date.</div></div>
           <div class="field"><label>Handled by</label><input id="i_handled" placeholder="Your name"></div>
           <div class="field"><label>Notes (optional)</label><textarea id="i_notes" placeholder="Remarks"></textarea></div>
+          <div class="verify" id="i_verify">
+            <div class="verify-idle">
+              <button type="button" class="ghost verify-btn" onclick="verifyOpen('i')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Bishop's verification</button>
+              <span class="verify-hint">Optional — confirm with the Bishop's password.</span>
+            </div>
+            <div class="verify-form" style="display:none">
+              <label>Bishop's password</label>
+              <div class="verify-row">
+                <input type="password" class="verify-input" id="i_verify_pw" placeholder="Enter password" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();verifyConfirm('i');}">
+                <button type="button" class="primary verify-confirm" onclick="verifyConfirm('i')">Confirm</button>
+              </div>
+              <div class="verify-msg" id="i_verify_msg"></div>
+              <button type="button" class="linkbtn verify-cancel" style="color:var(--muted)" onclick="verifyCancel('i')">Cancel</button>
+            </div>
+            <div class="verify-done" style="display:none">
+              <span class="verify-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Verified by the Bishop</span>
+              <button type="button" class="linkbtn" style="color:var(--muted)" onclick="verifyReset('i')">Undo</button>
+            </div>
+          </div>
           <button class="primary" id="i_submit" onclick="submitInput()">Record Input</button>
         </div>
       </section>
 
       <!-- HISTORY -->
       <section id="tab-history" class="tab">
-        <div class="chips">
+        <div class="chips" id="histTypeChips">
           <div class="chip active" data-f="ALL" onclick="setHistoryFilter('ALL')">All <b id="c_all">0</b></div>
           <div class="chip" data-f="OUT" onclick="setHistoryFilter('OUT')">Output <b id="c_out">0</b></div>
           <div class="chip" data-f="IN" onclick="setHistoryFilter('IN')">Input <b id="c_in">0</b></div>
+        </div>
+        <div class="chips sub" id="histVerifyChips">
+          <div class="chip active" data-v="ALL" onclick="setHistoryVerify('ALL')">All</div>
+          <div class="chip" data-v="VERIFIED" onclick="setHistoryVerify('VERIFIED')">✓ Verified <b id="c_ver">0</b></div>
+          <div class="chip" data-v="UNVERIFIED" onclick="setHistoryVerify('UNVERIFIED')">Unverified <b id="c_unver">0</b></div>
         </div>
         <div class="toolbar">
           <input id="histQ" type="search" placeholder="Search item, recipient, source, worker…" oninput="renderHistory()">
@@ -368,6 +435,8 @@
   var DATA = { items: [], categories: [], stats: {} };
   var HISTORY = [];
   var historyFilter = 'ALL';
+  var historyVerify = 'ALL';
+  var verifyPw = { o: '', i: '' };   // confirmed Bishop's password per form
   var quickFilter = '';
   var inputCombo = null;
   var busy = false;
@@ -663,6 +732,32 @@
     return wrap;
   }
 
+  /* ---------- Bishop's verification ---------- */
+  function setVerifyView(p, view) {
+    document.querySelector('#' + p + '_verify .verify-idle').style.display = (view === 'idle') ? 'flex' : 'none';
+    document.querySelector('#' + p + '_verify .verify-form').style.display = (view === 'form') ? 'block' : 'none';
+    document.querySelector('#' + p + '_verify .verify-done').style.display = (view === 'done') ? 'flex' : 'none';
+  }
+  function verifyOpen(p) { setVerifyView(p, 'form'); document.getElementById(p + '_verify_pw').focus(); }
+  function verifyCancel(p) {
+    document.getElementById(p + '_verify_pw').value = '';
+    document.getElementById(p + '_verify_msg').textContent = '';
+    setVerifyView(p, verifyPw[p] ? 'done' : 'idle');
+  }
+  function verifyReset(p) { verifyPw[p] = ''; document.getElementById(p + '_verify_pw').value = ''; setVerifyView(p, 'idle'); }
+  function verifyConfirm(p) {
+    var pw = document.getElementById(p + '_verify_pw').value || '';
+    var msg = document.getElementById(p + '_verify_msg');
+    if (!pw) { msg.className = 'verify-msg err'; msg.textContent = 'Enter the password.'; return; }
+    msg.className = 'verify-msg'; msg.textContent = 'Checking…';
+    api('verify', 'POST', { password: pw }).then(function (r) {
+      if (r.valid) {
+        verifyPw[p] = pw; document.getElementById(p + '_verify_pw').value = ''; msg.textContent = '';
+        setVerifyView(p, 'done'); toast('Verified by the Bishop.', false, true);
+      } else { msg.className = 'verify-msg err'; msg.textContent = 'Incorrect password. Please try again.'; }
+    }).catch(function (e) { msg.className = 'verify-msg err'; msg.textContent = (e && e.message) || 'Could not verify.'; });
+  }
+
   /* ---------- output ---------- */
   function ensureOutLine() { if (document.querySelectorAll('#outLines .lineitem').length === 0) addOutLine(); }
   function addOutLine() {
@@ -692,13 +787,14 @@
     if (!ok) return toast('Each item row needs both an item and a quantity.', true);
     if (!lines.length) return toast('Add at least one item.', true);
     setBusy('o_submit', true, 'Recording…');
-    api('output', 'POST', { recipient: recipient, handledBy: val('o_handled'), notes: val('o_notes'), lines: lines })
+    api('output', 'POST', { recipient: recipient, handledBy: val('o_handled'), notes: val('o_notes'), lines: lines, verifyPassword: verifyPw.o })
       .then(function (res) { afterWrite('o_submit', 'Record Output', res, resetOutput); })
       .catch(function (e) { afterErr('o_submit', 'Record Output', e); });
   }
   function resetOutput() {
     ['o_recipient', 'o_handled', 'o_notes'].forEach(function (id) { document.getElementById(id).value = ''; });
     document.getElementById('outLines').innerHTML = ''; addOutLine();
+    verifyReset('o');
   }
 
   /* ---------- input ---------- */
@@ -725,6 +821,7 @@
       payload.itemNotes = val('i_itemnotes');
       payload.target = Number(val('i_target')) || 0;
     } else { payload.id = Number(sel); }
+    payload.verifyPassword = verifyPw.i;
     setBusy('i_submit', true, 'Recording…');
     api('input', 'POST', payload)
       .then(function (res) { afterWrite('i_submit', 'Record Input', res, resetInput); })
@@ -736,6 +833,7 @@
     });
     if (inputCombo && inputCombo.reset) inputCombo.reset();
     onInputComboChange('');
+    verifyReset('i');
   }
 
   /* ---------- shared write ---------- */
@@ -751,8 +849,18 @@
   /* ---------- history ---------- */
   function setHistoryFilter(f) {
     historyFilter = f;
-    document.querySelectorAll('.chip').forEach(function (c) { c.classList.toggle('active', c.dataset.f === f); });
+    document.querySelectorAll('#histTypeChips .chip').forEach(function (c) { c.classList.toggle('active', c.dataset.f === f); });
     renderHistory();
+  }
+  function setHistoryVerify(v) {
+    historyVerify = v;
+    document.querySelectorAll('#histVerifyChips .chip').forEach(function (c) { c.classList.toggle('active', c.dataset.v === v); });
+    renderHistory();
+  }
+  function verifyTag(t) {
+    return t.verified
+      ? '<span class="vtag ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Verified</span>'
+      : '<span class="vtag muted">Unverified</span>';
   }
   function dateOf(ts) { var m = String(ts || '').match(/^(.*\d{4})/); return m ? m[1] : (ts || 'Earlier'); }
   function timeOf(ts) { var t = String(ts || '').replace(/^.*\d{4}\s*/, ''); return t || ts || ''; }
@@ -762,17 +870,25 @@
     return '<div class="tx"><span class="badge ' + t.type + '">' + t.type + '</span>' +
       '<div class="d"><div class="t">' + t.quantity + ' ' + esc(t.unit || '') + ' — ' + esc(t.item) + '</div>' +
       '<div class="s">' + esc(party) + (t.handledBy ? (' · by ' + esc(t.handledBy)) : '') + esc(bal) +
-      ' · ' + esc(timeOf(t.timestamp)) + '</div></div></div>';
+      ' · ' + esc(timeOf(t.timestamp)) + '</div></div>' +
+      '<div class="vwrap">' + verifyTag(t) + '</div></div>';
   }
   function renderHistory() {
-    var nAll = HISTORY.length, nOut = 0, nIn = 0;
-    HISTORY.forEach(function (t) { if (t.type === 'OUT') nOut++; else if (t.type === 'IN') nIn++; });
+    var nAll = HISTORY.length, nOut = 0, nIn = 0, nVer = 0, nUn = 0;
+    HISTORY.forEach(function (t) {
+      if (t.type === 'OUT') nOut++; else if (t.type === 'IN') nIn++;
+      if (t.verified) nVer++; else nUn++;
+    });
     document.getElementById('c_all').textContent = nAll;
     document.getElementById('c_out').textContent = nOut;
     document.getElementById('c_in').textContent = nIn;
+    document.getElementById('c_ver').textContent = nVer;
+    document.getElementById('c_unver').textContent = nUn;
     var q = (document.getElementById('histQ').value || '').toLowerCase().trim();
     var list = HISTORY.filter(function (t) {
       if (historyFilter !== 'ALL' && t.type !== historyFilter) return false;
+      if (historyVerify === 'VERIFIED' && !t.verified) return false;
+      if (historyVerify === 'UNVERIFIED' && t.verified) return false;
       if (q) { var hay = (String(t.item) + ' ' + t.party + ' ' + t.handledBy + ' ' + t.notes + ' ' + t.category).toLowerCase(); if (hay.indexOf(q) === -1) return false; }
       return true;
     });

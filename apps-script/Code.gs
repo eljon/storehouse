@@ -24,9 +24,13 @@ const INV_HEADERS = ['ID', 'Category', 'Item', 'Notes / Size', 'Unit', 'Quantity
 // Items expiring within this many days count as "near expiry".
 const NEAR_EXPIRY_DAYS = 90;
 const TX_HEADERS  = ['Timestamp', 'Type', 'Item ID', 'Item', 'Category',
-                     'Quantity', 'Unit', 'Party', 'Handled By', 'Notes', 'Balance After'];
+                     'Quantity', 'Unit', 'Party', 'Handled By', 'Notes', 'Balance After', 'Verified'];
 
 const APP_TITLE = "Kalayaan Ward Bishop's Storehouse";
+
+// Password for the Bishop's verification of input/output transactions.
+// (Kept server-side; it is not exposed in the public front-end.)
+const BISHOP_PASSWORD = 'widowsmite';
 
 /**
  * Starting inventory, taken from the emergency-prep checklist
@@ -106,6 +110,8 @@ function handleRequest_(e, isPost) {
     switch (action) {
       case 'ping':
         return jsonOut_({ ok: true, title: APP_TITLE });
+      case 'verify':
+        return jsonOut_({ ok: true, valid: String((body.password || params.password) || '') === BISHOP_PASSWORD });
       case 'dashboard':
         return jsonOut_({ ok: true, dashboard: getDashboard() });
       case 'transactions':
@@ -173,8 +179,9 @@ function setup() {
   ensureHeaders_(inv, INV_HEADERS);
   ensureHeaders_(tx,  TX_HEADERS);
 
-  // Keep the header row current (adds the Expiry column to older sheets).
+  // Keep the header rows current (adds the Expiry / Verified columns to older sheets).
   inv.getRange(1, 1, 1, INV_HEADERS.length).setValues([INV_HEADERS]);
+  tx.getRange(1, 1, 1, TX_HEADERS.length).setValues([TX_HEADERS]);
 
   // Seed inventory only when there is no data yet (headers only).
   var seeded = false;
@@ -335,7 +342,8 @@ function getRecentTransactions(limit) {
       party: r[7],
       handledBy: r[8],
       notes: r[9],
-      balanceAfter: r[10]
+      balanceAfter: r[10],
+      verified: (r[11] === 'Yes' || r[11] === true)
     };
   });
   return out.reverse(); // newest first
@@ -361,6 +369,7 @@ function recordOutput(payload) {
     const recipient = String(payload.recipient || '').trim();
     const handledBy = String(payload.handledBy || '').trim();
     const notes     = String(payload.notes || '').trim();
+    const verified  = isBishopVerified_(payload);
     const lines     = (payload.lines || []).filter(function (l) {
       return l && Number(l.quantity) > 0;
     });
@@ -398,7 +407,7 @@ function recordOutput(payload) {
       const balanceAfter = (Number(values[i][5]) || 0) - want;
       values[i][5] = balanceAfter;
       txRows.push([ts, 'OUT', values[i][0], values[i][2], values[i][1],
-                   want, values[i][4], recipient, handledBy, notes, balanceAfter]);
+                   want, values[i][4], recipient, handledBy, notes, balanceAfter, verified ? 'Yes' : 'No']);
     });
 
     range.setValues(values);
@@ -406,7 +415,9 @@ function recordOutput(payload) {
 
     return {
       ok: true,
-      message: 'Recorded output of ' + lines.length + ' item(s) to ' + recipient + '.',
+      message: 'Recorded output of ' + lines.length + ' item(s) to ' + recipient + '.' +
+               (verified ? ' Verified by the Bishop.' : ''),
+      verified: verified,
       dashboard: getDashboard()
     };
   } finally {
@@ -438,6 +449,7 @@ function recordInput(payload) {
     const handledBy = String(payload.handledBy || '').trim();
     const notes     = String(payload.notes || '').trim();
     const expiry    = normExpiryInput_(payload.expiry);
+    const verified  = isBishopVerified_(payload);
 
     if (!(qty > 0)) throw new Error('Please enter a quantity greater than zero.');
 
@@ -479,12 +491,14 @@ function recordInput(payload) {
     var expNote = expiry ? (notes ? notes + ' ' : '') + '(exp ' + expiry + ')' : notes;
     appendTransactions_([[
       new Date(), 'IN', itemId, itemName, category,
-      qty, unit, source, handledBy, expNote, balanceAfter
+      qty, unit, source, handledBy, expNote, balanceAfter, verified ? 'Yes' : 'No'
     ]]);
 
     return {
       ok: true,
-      message: 'Recorded input of ' + qty + ' ' + unit + ' of "' + itemName + '".',
+      message: 'Recorded input of ' + qty + ' ' + unit + ' of "' + itemName + '".' +
+               (verified ? ' Verified by the Bishop.' : ''),
+      verified: verified,
       dashboard: getDashboard()
     };
   } finally {
@@ -498,6 +512,13 @@ function mustSheet_(name) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
   if (!sheet) throw new Error('Sheet "' + name + '" is missing. Run setup() once from the editor.');
   return sheet;
+}
+
+/** True when the payload carries the correct Bishop's verification password. */
+function isBishopVerified_(payload) {
+  var pw = payload && payload.verifyPassword;
+  if (pw === undefined || pw === null || pw === '') return false;
+  return String(pw) === BISHOP_PASSWORD;
 }
 
 /** Accepts '' or a 'yyyy-MM-dd' string; returns a clean 'yyyy-MM-dd' or ''. */

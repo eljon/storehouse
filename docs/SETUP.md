@@ -100,8 +100,12 @@ That's it — bookmark the Pages URL / add it to your home screen.
   The top **Near expiry** tile counts items due within 3 months (or already
   expired); tap it to see **all items that have an expiry date, soonest first**.
   The **Low stock** and **Out of stock** tiles are tap-to-filter too.
-- **🕘 History** — every movement in one place. Tap **All / Output / Input** to
-  filter, or use the search box (item, recipient, source, worker).
+- **✅ Bishop's verification** — on the Output/Input forms, tap **Bishop's
+  verification** and enter the Bishop's password to sign off a transaction
+  before recording it. Each entry is stamped **Verified** or **Unverified**.
+- **🕘 History** — every movement in one place. Filter by **All / Output /
+  Input**, by **Verified / Unverified**, or use the search box (item,
+  recipient, source, worker).
 
 Every input/output is written to the **Transactions** tab with a timestamp, so
 you always have a full paper trail.
@@ -125,11 +129,15 @@ you always have a full paper trail.
 
 ## Notes
 
-- **Already set up before the Expiry feature?** Re-paste the latest
+- **Updated to a newer version (Expiry / Verification)?** Re-paste the latest
   `apps-script/Code.gs`, save, then run **🏬 Storehouse → ① Set up / load
-  starting data** once. It adds the **Expiry** column header to your existing
-  Inventory sheet without touching your data. Then publish a **new version** of
-  the Web app (*Deploy → Manage deployments → ✏️ → New version → Deploy*).
+  starting data** once. It adds the **Expiry** column to the Inventory sheet
+  and the **Verified** column to the Transactions sheet without touching your
+  data. Then publish a **new version** of the Web app (*Deploy → Manage
+  deployments → ✏️ → New version → Deploy*).
+- **Changing the Bishop's password?** Edit the `BISHOP_PASSWORD` value near the
+  top of `apps-script/Code.gs`, save, and publish a **new version**. The
+  password lives only in the Apps Script (not in the public GitHub Pages site).
 - **`setup()` is safe to re-run** — it won't wipe an Inventory tab that already
   has data, and never touches your Transactions log.
 - Starting quantities double as **target / par levels** for the low-stock
