@@ -619,10 +619,26 @@
     var dl = document.getElementById('catList'); dl.innerHTML = '';
     DATA.categories.forEach(function (c) { var o = document.createElement('option'); o.value = c; dl.appendChild(o); });
   }
+  // Pluralize a unit for a given quantity: 1 can, 2 cans, 3 pcs, 2 boxes.
+  function plural(unit, n) {
+    var u = String(unit == null ? '' : unit).trim();
+    if (!u) return '';
+    if (Math.abs(Number(n)) === 1) return u;
+    var l = u.toLowerCase();
+    if (/(s|x|z|ch|sh)$/.test(l)) return u + 'es';        // box -> boxes
+    if (/[^aeiou]y$/.test(l)) return u.slice(0, -1) + 'ies'; // e.g. tray -> ... (safe default)
+    return u + 's';                                       // can -> cans, pc -> pcs
+  }
   function stockPill(it) {
+    // "In stock" is shown in the quantity line instead of as a pill.
     if (it.quantity <= 0) return '<span class="tag danger">Out of stock</span>';
     if (it.target > 0 && it.quantity < it.target) return '<span class="tag warn">Low stock</span>';
-    return '<span class="tag ok">In stock</span>';
+    return '';
+  }
+  function qtyLine(it) {
+    var u = esc(plural(it.unit, it.quantity));
+    var label = (it.quantity <= 0) ? u : (u + ' in stock');
+    return '<div class="icard-qty"><b>' + it.quantity + '</b> <span>' + label + '</span></div>';
   }
   function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
   // Calendar difference (from <= to) as whole years / months / days.
@@ -698,7 +714,7 @@
       '<div class="icard-name">' + esc(it.item) + '</div>' +
       '<div class="icard-sub">' + esc(it.notes || '') + (it.target ? (' · par ' + it.target) : '') + '</div>' +
       '<div class="icard-tags">' + stockPill(it) + expiryBadge(it) + '</div>' +
-      '<div class="icard-qty"><b>' + it.quantity + '</b> <span>' + esc(it.unit || '') + '</span></div></div>';
+      qtyLine(it) + '</div>';
   }
 
   /* ---------- combobox ---------- */
@@ -738,7 +754,7 @@
         if (o.isNew) return '<div class="combo-row new" data-i="' + i + '">' + esc(o.name) + '</div>';
         return '<div class="combo-row" data-i="' + i + '"><div style="flex:1;min-width:0">' +
           '<div class="cr-name">' + esc(o.name) + '</div>' + (o.sub ? '<div class="cr-sub">' + esc(o.sub) + '</div>' : '') + '</div>' +
-          '<div class="cr-qty' + (o.qty <= 0 ? ' zero' : '') + '">' + o.qty + ' ' + esc(o.unit || '') + '</div></div>';
+          '<div class="cr-qty' + (o.qty <= 0 ? ' zero' : '') + '">' + o.qty + ' ' + esc(plural(o.unit, o.qty)) + '</div></div>';
       }).join('');
       Array.prototype.forEach.call(pop.querySelectorAll('.combo-row'), function (row) {
         row.addEventListener('mousedown', function (e) { e.preventDefault(); pick(Number(row.dataset.i)); });
@@ -940,7 +956,7 @@
     var bal = (t.balanceAfter !== '' && t.balanceAfter != null) ? (' · bal ' + t.balanceAfter) : '';
     var vinfo = (t.verified && t.verifiedAt) ? (' · verified ' + esc(t.verifiedAt)) : '';
     return '<div class="tx"><span class="badge ' + t.type + '">' + t.type + '</span>' +
-      '<div class="d"><div class="t">' + t.quantity + ' ' + esc(t.unit || '') + ' — ' + esc(t.item) + '</div>' +
+      '<div class="d"><div class="t">' + t.quantity + ' ' + esc(plural(t.unit, t.quantity)) + ' — ' + esc(t.item) + '</div>' +
       '<div class="s">' + esc(party) + (t.handledBy ? (' · by ' + esc(t.handledBy)) : '') + esc(bal) +
       ' · ' + esc(timeOf(t.timestamp)) + vinfo + '</div></div>' +
       '<div class="vwrap">' + verifyCell(t) + '</div></div>';
