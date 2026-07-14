@@ -12,7 +12,7 @@ no billing** — anywhere.
 | 📦 **Check inventory** | Browse current stock, search, filter by category, and spot **IN / LOW / OUT OF STOCK** and **expiry** status at a glance. |
 | 📤 **Record output** | Log items leaving the storehouse — recipient name + one or more items picked with a **type-to-search** selector (shows live stock). Stock is validated so you can't over-issue. |
 | 📥 **Record input** | Log items received — find an item with the **searchable** picker, or add a brand-new item on the fly. Optionally set/update an **expiry date**. |
-| ⏰ **Expiry tracking** | Each item can carry an expiry date. Items expiring within **3 months** (or already expired) are flagged on the item and counted in the dashboard. |
+| ⏰ **Expiry tracking** | Each item can carry an expiry date. Every card shows a human-readable countdown (*Expires in 1 yr 2 mo*, *Expired 6 days ago*). Items due within **3 months** (or already expired) are flagged and counted; tapping the Near-expiry tile lists **all dated items, soonest first**. |
 | 🕘 **History** | Full log of every movement with **All / Output / Input** filters and a search box (by item, recipient, source, or worker), grouped by date. |
 
 **Dashboard tiles** at the top show Items, **Near expiry (≤ 3 months)**, Low

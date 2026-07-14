@@ -95,8 +95,10 @@ That's it — bookmark the Pages URL / add it to your home screen.
 - **📥 Input** — type to search for an item (or pick **➕ Add a NEW item**), enter
   the quantity received and the source, and optionally an **expiry date** →
   **Record Input**. (Leaving expiry blank keeps the item's current date.)
-- **⏰ Expiry** — the top **Near expiry** tile counts items expiring within 3
-  months (or already expired). Tap it to see just those items, soonest first.
+- **⏰ Expiry** — every item with a date shows a human-readable countdown
+  (e.g. *Expires in 1 yr 2 mo*, *Expires in 28 days*, or *Expired 6 days ago*).
+  The top **Near expiry** tile counts items due within 3 months (or already
+  expired); tap it to see **all items that have an expiry date, soonest first**.
   The **Low stock** and **Out of stock** tiles are tap-to-filter too.
 - **🕘 History** — every movement in one place. Tap **All / Output / Input** to
   filter, or use the search box (item, recipient, source, worker).

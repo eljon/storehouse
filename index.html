@@ -518,13 +518,40 @@
     if (it.target > 0 && it.quantity < it.target) return '<span class="tag warn">Low stock</span>';
     return '<span class="tag ok">In stock</span>';
   }
+  function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
+  // Calendar difference (from <= to) as whole years / months / days.
+  function ymDiff(from, to) {
+    var y = to.getFullYear() - from.getFullYear();
+    var m = to.getMonth() - from.getMonth();
+    var d = to.getDate() - from.getDate();
+    if (d < 0) { m--; d += daysInMonth(to.getFullYear(), to.getMonth() - 1); }
+    if (m < 0) { y--; m += 12; }
+    return { y: y, m: m, d: d };
+  }
+  function humanDur(x) {
+    if (x.y > 0) return x.y + (x.y > 1 ? ' yrs' : ' yr') + (x.m > 0 ? ' ' + x.m + ' mo' : '');
+    if (x.m > 0) return x.m + ' mo' + (x.d > 0 && x.m < 2 ? ' ' + x.d + ' d' : '');
+    if (x.d > 1) return x.d + ' days';
+    if (x.d === 1) return '1 day';
+    return 'today';
+  }
   function expiryBadge(it) {
     if (!it.expiry) return '';
-    if (it.expStatus === 'expired') return '<span class="tag danger">' + IC.clockSm + ' Expired · ' + esc(it.expiry) + '</span>';
-    if (it.expStatus === 'near') return '<span class="tag warn">' + IC.clockSm + ' ' + it.daysToExpiry + 'd left · ' + esc(it.expiry) + '</span>';
-    return '<span class="tag muted">Exp ' + esc(it.expiry) + '</span>';
+    var p = String(it.expiry).split('-');
+    var exp = new Date(+p[0], +p[1] - 1, +p[2]);
+    var n = new Date(), today = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    var cls, txt;
+    if (it.expStatus === 'expired') {
+      var d1 = humanDur(ymDiff(exp, today));
+      cls = 'danger'; txt = (d1 === 'today') ? 'Expired today' : 'Expired ' + d1 + ' ago';
+    } else {
+      var d2 = humanDur(ymDiff(today, exp));
+      cls = (it.expStatus === 'near') ? 'warn' : 'muted';
+      txt = (d2 === 'today') ? 'Expires today' : 'Expires in ' + d2;
+    }
+    return '<span class="tag ' + cls + '">' + IC.clockSm + ' ' + txt + ' · ' + esc(it.expiry) + '</span>';
   }
-  var QF = { expiry: 'Near expiry · expiring within 3 months', low: 'Low stock items', out: 'Out of stock items' };
+  var QF = { expiry: 'Items with an expiry date · soonest first', low: 'Low stock items', out: 'Out of stock items' };
   function renderBanner() {
     var b = document.getElementById('invBanner');
     if (!quickFilter) { b.innerHTML = ''; return; }
@@ -537,7 +564,7 @@
     var cat = document.getElementById('catFilter').value;
     var list = DATA.items.filter(function (it) {
       if (cat && it.category !== cat) return false;
-      if (quickFilter === 'expiry' && !(it.expStatus === 'near' || it.expStatus === 'expired')) return false;
+      if (quickFilter === 'expiry' && !it.expiry) return false;   // all items that carry an expiry date
       if (quickFilter === 'low' && !(it.quantity > 0 && it.target > 0 && it.quantity < it.target)) return false;
       if (quickFilter === 'out' && !(it.quantity <= 0)) return false;
       if (q && (String(it.item).toLowerCase().indexOf(q) === -1) &&
