@@ -100,12 +100,13 @@ That's it — bookmark the Pages URL / add it to your home screen.
   The top **Near expiry** tile counts items due within 3 months (or already
   expired); tap it to see **all items that have an expiry date, soonest first**.
   The **Low stock** and **Out of stock** tiles are tap-to-filter too.
-- **✅ Bishop's verification** — on the Output/Input forms, tap **Bishop's
-  verification** and enter the Bishop's password to sign off a transaction
-  before recording it. Each entry is stamped **Verified** or **Unverified**.
+- **✅ Bishop's verification** — sign off a transaction with the Bishop's
+  password. Do it **while recording** (the **Bishop's verification** button on
+  the Output/Input forms) or **later from History** (the **Verify** button on
+  any unverified row). Each verification is stamped with the date and time.
 - **🕘 History** — every movement in one place. Filter by **All / Output /
   Input**, by **Verified / Unverified**, or use the search box (item,
-  recipient, source, worker).
+  recipient, source, worker). Verified rows show when they were verified.
 
 Every input/output is written to the **Transactions** tab with a timestamp, so
 you always have a full paper trail.

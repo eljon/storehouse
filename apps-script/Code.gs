@@ -24,7 +24,8 @@ const INV_HEADERS = ['ID', 'Category', 'Item', 'Notes / Size', 'Unit', 'Quantity
 // Items expiring within this many days count as "near expiry".
 const NEAR_EXPIRY_DAYS = 90;
 const TX_HEADERS  = ['Timestamp', 'Type', 'Item ID', 'Item', 'Category',
-                     'Quantity', 'Unit', 'Party', 'Handled By', 'Notes', 'Balance After', 'Verified'];
+                     'Quantity', 'Unit', 'Party', 'Handled By', 'Notes', 'Balance After',
+                     'Verified', 'Verified At'];
 
 const APP_TITLE = "Kalayaan Ward Bishop's Storehouse";
 
@@ -112,6 +113,8 @@ function handleRequest_(e, isPost) {
         return jsonOut_({ ok: true, title: APP_TITLE });
       case 'verify':
         return jsonOut_({ ok: true, valid: String((body.password || params.password) || '') === BISHOP_PASSWORD });
+      case 'verifyTx':
+        return jsonOut_(verifyTransaction_(body));
       case 'dashboard':
         return jsonOut_({ ok: true, dashboard: getDashboard() });
       case 'transactions':
@@ -330,9 +333,11 @@ function getRecentTransactions(limit) {
   const last = sheet.getLastRow();
   if (last <= 1) return [];
   const n = Math.min(limit, last - 1);
-  const values = sheet.getRange(last - n + 1, 1, n, TX_HEADERS.length).getValues();
-  const out = values.map(function (r) {
+  const startRow = last - n + 1;
+  const values = sheet.getRange(startRow, 1, n, TX_HEADERS.length).getValues();
+  const out = values.map(function (r, idx) {
     return {
+      row: startRow + idx,            // absolute sheet row (stable; log is append-only)
       timestamp: r[0] ? formatTs_(r[0]) : '',
       type: r[1],
       item: r[3],
@@ -343,10 +348,46 @@ function getRecentTransactions(limit) {
       handledBy: r[8],
       notes: r[9],
       balanceAfter: r[10],
-      verified: (r[11] === 'Yes' || r[11] === true)
+      verified: (r[11] === 'Yes' || r[11] === true),
+      verifiedAt: r[12] ? formatTs_(r[12]) : ''
     };
   });
   return out.reverse(); // newest first
+}
+
+/**
+ * Verify a single already-recorded transaction (from the History tab).
+ * payload = { row: Number, password: String }. Stamps Verified='Yes' and a
+ * Verified At timestamp. Returns { ok, row, verified, verifiedAt } or an error.
+ */
+function verifyTransaction_(payload) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    payload = payload || {};
+    if (String(payload.password || '') !== BISHOP_PASSWORD) {
+      return { ok: false, error: 'Incorrect password.' };
+    }
+    const row = Number(payload.row);
+    const sheet = mustSheet_(TX_SHEET);
+    const last = sheet.getLastRow();
+    if (!(row >= 2 && row <= last) || !sheet.getRange(row, 2).getValue()) {
+      return { ok: false, error: 'Transaction not found. Please refresh and try again.' };
+    }
+    const verifiedCol = 12, verifiedAtCol = 13;   // 1-based columns
+    var ts = new Date();
+    const already = (sheet.getRange(row, verifiedCol).getValue() === 'Yes');
+    if (already) {
+      const existing = sheet.getRange(row, verifiedAtCol).getValue();
+      if (existing) ts = existing;
+    } else {
+      sheet.getRange(row, verifiedCol).setValue('Yes');
+      sheet.getRange(row, verifiedAtCol).setValue(ts);
+    }
+    return { ok: true, row: row, verified: true, verifiedAt: formatTs_(ts) };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 /* ============================ Writes ================================== */
@@ -407,7 +448,8 @@ function recordOutput(payload) {
       const balanceAfter = (Number(values[i][5]) || 0) - want;
       values[i][5] = balanceAfter;
       txRows.push([ts, 'OUT', values[i][0], values[i][2], values[i][1],
-                   want, values[i][4], recipient, handledBy, notes, balanceAfter, verified ? 'Yes' : 'No']);
+                   want, values[i][4], recipient, handledBy, notes, balanceAfter,
+                   verified ? 'Yes' : 'No', verified ? ts : '']);
     });
 
     range.setValues(values);
@@ -489,9 +531,11 @@ function recordInput(payload) {
     }
 
     var expNote = expiry ? (notes ? notes + ' ' : '') + '(exp ' + expiry + ')' : notes;
+    var ts = new Date();
     appendTransactions_([[
-      new Date(), 'IN', itemId, itemName, category,
-      qty, unit, source, handledBy, expNote, balanceAfter, verified ? 'Yes' : 'No'
+      ts, 'IN', itemId, itemName, category,
+      qty, unit, source, handledBy, expNote, balanceAfter,
+      verified ? 'Yes' : 'No', verified ? ts : ''
     ]]);
 
     return {

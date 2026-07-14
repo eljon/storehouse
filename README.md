@@ -13,7 +13,7 @@ no billing** — anywhere.
 | 📤 **Record output** | Log items leaving the storehouse — recipient name + one or more items picked with a **type-to-search** selector (shows live stock). Stock is validated so you can't over-issue. |
 | 📥 **Record input** | Log items received — find an item with the **searchable** picker, or add a brand-new item on the fly. Optionally set/update an **expiry date**. |
 | ⏰ **Expiry tracking** | Each item can carry an expiry date. Every card shows a human-readable countdown (*Expires in 1 yr 2 mo*, *Expired 6 days ago*). Items due within **3 months** (or already expired) are flagged and counted; tapping the Near-expiry tile lists **all dated items, soonest first**. |
-| ✅ **Bishop's verification** | Output and Input can be signed off with the Bishop's password before recording; each transaction is stamped **Verified** / **Unverified**. |
+| ✅ **Bishop's verification** | Sign off a transaction with the Bishop's password — while recording, or later from History (a **Verify** button on unverified rows). Each verification is stamped with a date/time. |
 | 🕘 **History** | Full log of every movement with **All / Output / Input** and **Verified / Unverified** filters and a search box (by item, recipient, source, or worker), grouped by date. |
 
 **Dashboard tiles** at the top show Items, **Near expiry (≤ 3 months)**, Low
@@ -46,7 +46,7 @@ with no server of our own and no Cloud Console.
 The Google Sheet has two tabs, created automatically by `setup()`:
 
 - **`Inventory`** — `ID · Category · Item · Notes/Size · Unit · Quantity · Target · Expiry`
-- **`Transactions`** — `Timestamp · Type · Item ID · Item · Category · Quantity · Unit · Party · Handled By · Notes · Balance After · Verified`
+- **`Transactions`** — `Timestamp · Type · Item ID · Item · Category · Quantity · Unit · Party · Handled By · Notes · Balance After · Verified · Verified At`
 
 The app is **seeded** from the ward's *Emergency Prep Shopping Checklist*
 (2 meals × 60 pax + adult meds + kids meds + first aid + disposables — 40 items),

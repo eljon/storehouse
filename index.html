@@ -210,6 +210,12 @@
     .vtag.ok { background:var(--ok-bg); color:var(--ok); }
     .vtag.muted { background:#eef0f3; color:var(--muted); }
     .tx .vwrap { flex:none; display:flex; align-items:center; }
+    .vbtn { display:inline-flex; align-items:center; gap:5px; background:#fff; border:1px solid var(--navy);
+      color:var(--navy); font-weight:700; font-size:11px; padding:6px 11px; border-radius:999px; cursor:pointer; white-space:nowrap; transition:.14s; }
+    .vbtn:hover { background:var(--navy); color:#fff; }
+    .vbtn svg { width:11px; height:11px; }
+    .vtx-summary { background:var(--bg); border:1px solid var(--line); border-radius: var(--r-sm);
+      padding:11px 13px; font-size:13px; font-weight:600; margin-bottom:16px; color:var(--ink); }
     .hist-date { font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
       color: var(--navy-deep); margin: 20px 2px 8px; }
     .tx { font-size: 13.5px; padding: 13px 2px; border-bottom:1px solid var(--line); display:flex; gap:12px; }
@@ -280,6 +286,21 @@
         <li>Copy the <b>Web app URL</b> and paste it above.</li>
       </ol>
       <div style="text-align:center"><button class="linkbtn" id="ov_cancel" style="color:var(--muted);display:none" onclick="closeOverlay()">Cancel</button></div>
+    </div>
+  </div>
+
+  <!-- ============ VERIFY-A-TRANSACTION MODAL ============ -->
+  <div class="overlay" id="vtxOverlay">
+    <div class="sheet">
+      <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#E4DFDA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+      <h2>Verify transaction</h2>
+      <p>Enter the Bishop's password to sign off this transaction.</p>
+      <div class="vtx-summary" id="vtx_summary"></div>
+      <div class="field"><label>Bishop's password</label>
+        <input type="password" id="vtx_pw" autocomplete="off" placeholder="Enter password" onkeydown="if(event.key==='Enter'){event.preventDefault();vtxConfirm();}"></div>
+      <button class="primary" id="vtx_confirm" onclick="vtxConfirm()">Verify transaction</button>
+      <div class="statusline" id="vtx_msg"></div>
+      <div style="text-align:center"><button class="linkbtn" style="color:var(--muted)" onclick="vtxClose()">Cancel</button></div>
     </div>
   </div>
 
@@ -857,21 +878,55 @@
     document.querySelectorAll('#histVerifyChips .chip').forEach(function (c) { c.classList.toggle('active', c.dataset.v === v); });
     renderHistory();
   }
-  function verifyTag(t) {
-    return t.verified
-      ? '<span class="vtag ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Verified</span>'
-      : '<span class="vtag muted">Unverified</span>';
+  function verifyCell(t) {
+    if (t.verified) return '<span class="vtag ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Verified</span>';
+    return '<button class="vbtn" type="button" onclick="openVtx(' + t.row + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Verify</button>';
+  }
+
+  /* Verify a single past transaction from the History tab. */
+  var currentVtxRow = null;
+  function openVtx(row) {
+    currentVtxRow = row;
+    var t = HISTORY.filter(function (x) { return x.row === row; })[0];
+    document.getElementById('vtx_summary').textContent = t
+      ? (t.type + ' · ' + t.quantity + ' ' + (t.unit || '') + ' ' + t.item + (t.party ? ' · ' + t.party : '') + ' · ' + t.timestamp)
+      : '';
+    document.getElementById('vtx_pw').value = '';
+    document.getElementById('vtx_msg').textContent = '';
+    document.getElementById('vtxOverlay').classList.add('show');
+    setTimeout(function () { document.getElementById('vtx_pw').focus(); }, 50);
+  }
+  function vtxClose() { document.getElementById('vtxOverlay').classList.remove('show'); currentVtxRow = null; }
+  function vtxConfirm() {
+    var pw = document.getElementById('vtx_pw').value || '';
+    var msg = document.getElementById('vtx_msg');
+    if (!pw) { msg.className = 'statusline err'; msg.textContent = 'Enter the password.'; return; }
+    if (currentVtxRow == null) return;
+    msg.className = 'statusline'; msg.textContent = 'Verifying…';
+    setBusy('vtx_confirm', true, 'Verifying…');
+    api('verifyTx', 'POST', { row: currentVtxRow, password: pw }).then(function (res) {
+      setBusy('vtx_confirm', false, 'Verify transaction');
+      var t = HISTORY.filter(function (x) { return x.row === res.row; })[0];
+      if (t) { t.verified = true; t.verifiedAt = res.verifiedAt; }
+      renderHistory();
+      vtxClose();
+      toast('Transaction verified by the Bishop.', false, true);
+    }).catch(function (e) {
+      setBusy('vtx_confirm', false, 'Verify transaction');
+      msg.className = 'statusline err'; msg.textContent = (e && e.message) || 'Could not verify.';
+    });
   }
   function dateOf(ts) { var m = String(ts || '').match(/^(.*\d{4})/); return m ? m[1] : (ts || 'Earlier'); }
   function timeOf(ts) { var t = String(ts || '').replace(/^.*\d{4}\s*/, ''); return t || ts || ''; }
   function txRow(t) {
     var party = t.party ? (t.type === 'OUT' ? 'to ' + t.party : 'from ' + t.party) : '';
     var bal = (t.balanceAfter !== '' && t.balanceAfter != null) ? (' · bal ' + t.balanceAfter) : '';
+    var vinfo = (t.verified && t.verifiedAt) ? (' · verified ' + esc(t.verifiedAt)) : '';
     return '<div class="tx"><span class="badge ' + t.type + '">' + t.type + '</span>' +
       '<div class="d"><div class="t">' + t.quantity + ' ' + esc(t.unit || '') + ' — ' + esc(t.item) + '</div>' +
       '<div class="s">' + esc(party) + (t.handledBy ? (' · by ' + esc(t.handledBy)) : '') + esc(bal) +
-      ' · ' + esc(timeOf(t.timestamp)) + '</div></div>' +
-      '<div class="vwrap">' + verifyTag(t) + '</div></div>';
+      ' · ' + esc(timeOf(t.timestamp)) + vinfo + '</div></div>' +
+      '<div class="vwrap">' + verifyCell(t) + '</div></div>';
   }
   function renderHistory() {
     var nAll = HISTORY.length, nOut = 0, nIn = 0, nVer = 0, nUn = 0;
