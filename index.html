@@ -253,7 +253,7 @@
     /* distribution receipt */
     #receiptModal { z-index: 300; }
     .rc-sheet { max-width: 640px; position: relative; padding: 0; overflow: hidden; }
-    .rc-controls { display:flex; gap:10px; align-items:center; padding: 14px 16px; border-bottom:1px solid var(--line); background:var(--bg); }
+    .rc-controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding: 14px 16px; border-bottom:1px solid var(--line); background:var(--bg); }
     .rc-controls .im-x { position:static; margin-left:auto; }
     .receipt { padding: 26px 28px 30px; color:#1a1a1a; font-size:13.5px; }
     .rc-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; border-bottom:2px solid #0d1b2a; padding-bottom:14px; }
@@ -392,7 +392,8 @@
       <div class="rc-controls">
         <button class="ghost" id="rc_clear" onclick="rcClearSig()">Clear</button>
         <button class="ghost" id="rc_print" onclick="rcPrint()">🖨 Print</button>
-        <button class="primary" id="rc_save" style="width:auto" onclick="rcSave()">Save &amp; Print</button>
+        <button class="ghost" id="rc_saveonly" onclick="rcSave(false)">Save only</button>
+        <button class="primary" id="rc_save" style="width:auto" onclick="rcSave(true)">Save &amp; Print</button>
         <button class="im-x" title="Close" onclick="rcClose()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
       <div class="receipt" id="rc_doc">
@@ -1329,6 +1330,7 @@
     var img = document.getElementById('rc_sig_img');
     var pad = document.getElementById('rc_pad');
     document.getElementById('rc_clear').style.display = isView ? 'none' : 'inline-flex';
+    document.getElementById('rc_saveonly').style.display = isView ? 'none' : 'inline-flex';
     document.getElementById('rc_save').style.display = isView ? 'none' : 'inline-flex';
     if (isView) {
       pad.classList.remove('pad');
@@ -1355,21 +1357,23 @@
     var c = tmp.getContext('2d'); c.fillStyle = '#ffffff'; c.fillRect(0, 0, w, h); c.drawImage(src, 0, 0, w, h);
     return tmp.toDataURL('image/png');
   }
-  function rcSave() {
-    if (!rcData || rcData.mode === 'view') return rcPrint();
+  function rcSave(print) {
+    if (!rcData || rcData.mode === 'view') { if (print) rcPrint(); return; }
     if (!rcHasDrawn) return toast('Please have the recipient sign first.', true);
-    if (!(rcData.rows && rcData.rows.length)) { rcPrint(); return; }
+    if (!(rcData.rows && rcData.rows.length)) { if (print) rcPrint(); return; }
     var sig = rcSignatureDataUrl();
-    setBusy('rc_save', true, 'Saving…');
+    var btn = print ? 'rc_save' : 'rc_saveonly';
+    var label = print ? 'Save & Print' : 'Save only';
+    setBusy(btn, true, 'Saving…');
     api('saveSignature', 'POST', { rows: rcData.rows, signature: sig }).then(function (res) {
-      setBusy('rc_save', false, 'Save & Print');
+      setBusy(btn, false, label);
       (rcData.rows || []).forEach(function (rw) { var h = HISTORY.filter(function (x) { return x.row === rw; })[0]; if (h) h.signed = true; });
       renderHistory();
       rcData.mode = 'view'; rcData.signatureImg = sig; rcData.signedAt = (res && res.signedAt) || nowStr();
       applyReceiptMode(); rcRenderSignedAt();
       toast('Receipt signed & saved.', false, true);
-      setTimeout(rcPrint, 200);
-    }).catch(function (e) { setBusy('rc_save', false, 'Save & Print'); toast((e && e.message) || 'Could not save.', true); });
+      if (print) setTimeout(rcPrint, 200);
+    }).catch(function (e) { setBusy(btn, false, label); toast((e && e.message) || 'Could not save.', true); });
   }
   function initSigPad() {
     var canvas = document.getElementById('rc_canvas');
