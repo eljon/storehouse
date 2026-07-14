@@ -103,11 +103,12 @@ That's it — bookmark the Pages URL / add it to your home screen.
   The top **Near expiry** tile counts items due within 3 months (or already
   expired); tap it to see **all items that have an expiry date, soonest first**.
   The **Low stock** and **Out of stock** tiles are tap-to-filter too.
-- **🧾 Receipts** — when distributing, choose **Save & print** (opens a
-  printable receipt) or **Save only**. The receipt lists all items, has a
-  **signature pad** for the recipient (mouse or finger), and shows **Bishop
-  Eljon Serrano's** signature when the transaction is verified. You can also
-  reprint a receipt from any Distribute row in **History**.
+- **🧾 Receipts** — when distributing, choose **Save & print** or **Save only**.
+  The receipt lists all items and has a clearly-marked **signature box** the
+  recipient signs with a mouse or finger. **Save & Print** stores the
+  signature and prints; the receipt also shows **Bishop Eljon Serrano's**
+  signature when verified. In **History**, a signed Distribute row shows
+  **View receipt** — reopen it to see the saved signatures or reprint.
 - **✅ Bishop's verification** — sign off a transaction with the Bishop's
   password. Do it **while recording** (the **Bishop's verification** button on
   the Distribute / Restock forms) or **later from History** (the **Verify** button on
@@ -141,8 +142,8 @@ you always have a full paper trail.
 - **Updated to a newer version (Expiry / Verification)?** Re-paste the latest
   `apps-script/Code.gs`, save, then run **🏬 Storehouse → ① Set up / load
   starting data** once. It adds the **Expiry** column to the Inventory sheet
-  and the **Verified** column to the Transactions sheet without touching your
-  data. Then publish a **new version** of the Web app (*Deploy → Manage
+  and the **Verified / Verified At / Signature** columns to the Transactions
+  sheet without touching your data. Then publish a **new version** of the Web app (*Deploy → Manage
   deployments → ✏️ → New version → Deploy*).
 - **Changing the Bishop's password?** Edit the `BISHOP_PASSWORD` value near the
   top of `apps-script/Code.gs`, save, and publish a **new version**. The

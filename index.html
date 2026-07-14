@@ -272,8 +272,11 @@
     .rc-notes { font-size:12.5px; color:#333; margin-bottom:18px; min-height:1px; }
     .rc-notes b { color:#5b6675; font-weight:600; }
     .rc-sigs { display:grid; grid-template-columns:1fr 1fr; gap:26px; margin-top:26px; }
-    .rc-sig-box { height:78px; display:flex; align-items:flex-end; justify-content:center; }
-    #rc_canvas { width:100%; height:78px; touch-action:none; cursor:crosshair; }
+    .rc-sig-box { min-height:78px; display:flex; align-items:flex-end; justify-content:center; }
+    .rc-sig-box.pad { height:104px; align-items:stretch; border:2px dashed #6f9fc9; background:#eef5fb; border-radius:10px; position:relative; overflow:hidden; }
+    #rc_canvas { width:100%; height:104px; touch-action:none; cursor:crosshair; position:relative; z-index:2; display:block; }
+    .rc-sig-hint { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:6px; color:#5f8fbf; font-size:14px; font-weight:600; pointer-events:none; z-index:1; }
+    #rc_sig_img { max-width:100%; max-height:104px; align-self:center; }
     .rc-sig-line { border-top:1.5px solid #0d1b2a; margin-top:2px; }
     .rc-sig-cap { font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:#5b6675; margin-top:6px; }
     .rc-sig-name { font-size:13px; font-weight:600; color:#0d1b2a; margin-top:2px; min-height:16px; }
@@ -290,6 +293,8 @@
       body.rc-open #receiptModal { position:static !important; display:block !important; background:#fff; padding:0; overflow:visible; }
       body.rc-open #receiptModal .rc-sheet { box-shadow:none; border:0; max-width:none; border-radius:0; }
       body.rc-open #receiptModal .rc-controls { display:none !important; }
+      body.rc-open .rc-sig-box.pad { border:0; background:#fff; height:auto; }
+      body.rc-open .rc-sig-hint { display:none !important; }
       @page { margin: 14mm; }
     }
     .hist-date { font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
@@ -384,8 +389,9 @@
   <div class="overlay" id="receiptModal">
     <div class="sheet rc-sheet">
       <div class="rc-controls">
-        <button class="ghost" onclick="rcClearSig()">Clear signature</button>
-        <button class="primary" style="width:auto" onclick="rcPrint()">🖨 Print</button>
+        <button class="ghost" id="rc_clear" onclick="rcClearSig()">Clear</button>
+        <button class="ghost" id="rc_print" onclick="rcPrint()">🖨 Print</button>
+        <button class="primary" id="rc_save" style="width:auto" onclick="rcSave()">Save &amp; Print</button>
         <button class="im-x" title="Close" onclick="rcClose()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
       <div class="receipt" id="rc_doc">
@@ -411,7 +417,11 @@
 
         <div class="rc-sigs">
           <div class="rc-sig">
-            <div class="rc-sig-box"><canvas id="rc_canvas"></canvas></div>
+            <div class="rc-sig-box pad" id="rc_pad">
+              <canvas id="rc_canvas"></canvas>
+              <div class="rc-sig-hint" id="rc_hint">✍ Sign here</div>
+              <img id="rc_sig_img" alt="Recipient signature" style="display:none">
+            </div>
             <div class="rc-sig-line"></div>
             <div class="rc-sig-cap">Recipient's signature</div>
             <div class="rc-sig-name" id="rc_recipient_name"></div>
@@ -1027,7 +1037,7 @@
     api('output', 'POST', { recipient: recipient, handledBy: val('o_handled'), notes: val('o_notes'), lines: lines, verifyPassword: verifyPw.o })
       .then(function (res) {
         afterWrite(btnId, label, res, resetOutput);
-        if (print) { receipt.verified = !!(res && res.verified); receipt.verifiedAt = (res && res.verified) ? nowStr() : ''; openReceipt(receipt); }
+        if (print) { receipt.verified = !!(res && res.verified); receipt.verifiedAt = (res && res.verified) ? nowStr() : ''; receipt.mode = 'sign'; receipt.rows = (res && res.rows) || []; openReceipt(receipt); }
       })
       .catch(function (e) { afterErr(btnId, label, e); });
   }
@@ -1154,7 +1164,7 @@
       '<div class="s">' + esc(party) + (t.handledBy ? (' · by ' + esc(t.handledBy)) : '') + esc(bal) +
       ' · ' + esc(timeOf(t.timestamp)) + vinfo + '</div></div>' +
       '<div class="vwrap">' + verifyCell(t) +
-      (t.type === 'OUT' ? '<button class="rc-btn" type="button" onclick="openReceiptForTx(' + t.row + ')">Receipt</button>' : '') +
+      (t.type === 'OUT' ? '<button class="rc-btn" type="button" onclick="openReceiptForTx(' + t.row + ')">' + (t.signed ? 'View receipt' : 'Print receipt') + '</button>' : '') +
       '</div></div>';
   }
   function renderHistory() {
@@ -1246,7 +1256,7 @@
       if (res && res.dashboard) onData(res.dashboard);
       loadHistory();
       toast((res && res.message) || 'Saved.', false, true);
-      if (receipt) { receipt.verified = !!(res && res.verified); receipt.verifiedAt = (res && res.verified) ? nowStr() : ''; openReceipt(receipt); }
+      if (receipt) { receipt.verified = !!(res && res.verified); receipt.verifiedAt = (res && res.verified) ? nowStr() : ''; receipt.mode = 'sign'; receipt.rows = (res && res.rows) || []; openReceipt(receipt); }
       if (closeAfter) { imClose(); return; }
       imItem = DATA.items.filter(function (i) { return String(i.id) === String(imItem.id); })[0];
       if (!imItem) { imClose(); return; }
@@ -1272,7 +1282,7 @@
   }
 
   /* ---------- distribution receipt ---------- */
-  var rcSig = null;
+  var rcSig = null, rcData = null, rcHasDrawn = false;
   function nowStr() {
     try { return new Date().toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); }
     catch (e) { return '' + new Date(); }
@@ -1281,8 +1291,9 @@
     var d = new Date(), p = function (n) { return ('0' + n).slice(-2); };
     return 'KWS-' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
   }
-  // data = { recipient, handledBy, notes, items:[{item,quantity,unit}], verified, verifiedAt, timestamp }
+  // data = { recipient, handledBy, notes, items, verified, verifiedAt, timestamp, mode:'sign'|'view', rows:[], signatureImg }
   function openReceipt(data) {
+    rcData = data || {};
     var when = data.timestamp || nowStr();
     document.getElementById('rc_no').innerHTML = 'No. ' + esc(receiptNo()) + '<br>' + esc(when);
     var meta = '<div><span class="k">Recipient:</span> <b>' + esc(data.recipient || '—') + '</b></div>' +
@@ -1302,12 +1313,57 @@
       box.innerHTML = '<div class="rc-sig-pending">Pending Bishop verification</div>';
       name.textContent = '';
     }
+    applyReceiptMode();
     document.body.classList.add('rc-open');
     document.getElementById('receiptModal').classList.add('show');
-    setTimeout(initSigPad, 30);
+    if ((rcData.mode || 'sign') !== 'view') setTimeout(initSigPad, 30);
+  }
+  // Configure the recipient signature area + controls for sign vs view mode.
+  function applyReceiptMode() {
+    var isView = (rcData.mode === 'view');
+    var canvas = document.getElementById('rc_canvas');
+    var hint = document.getElementById('rc_hint');
+    var img = document.getElementById('rc_sig_img');
+    var pad = document.getElementById('rc_pad');
+    document.getElementById('rc_clear').style.display = isView ? 'none' : 'inline-flex';
+    document.getElementById('rc_save').style.display = isView ? 'none' : 'inline-flex';
+    if (isView) {
+      pad.classList.remove('pad');
+      canvas.style.display = 'none';
+      if (rcData.signatureImg) { img.src = rcData.signatureImg; img.style.display = 'block'; hint.style.display = 'none'; }
+      else { img.style.display = 'none'; hint.textContent = 'Not signed'; hint.style.color = '#9a978f'; hint.style.display = 'flex'; }
+    } else {
+      pad.classList.add('pad');
+      img.style.display = 'none';
+      canvas.style.display = 'block';
+      hint.textContent = '✍ Sign here'; hint.style.color = ''; hint.style.display = 'flex';
+      rcHasDrawn = false;
+    }
   }
   function rcClose() { document.getElementById('receiptModal').classList.remove('show'); document.body.classList.remove('rc-open'); }
   function rcPrint() { window.print(); }
+  function rcSignatureDataUrl() {
+    var src = document.getElementById('rc_canvas');
+    var w = 560, ratio = src.height / src.width || 0.25, h = Math.max(80, Math.round(w * ratio));
+    var tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
+    var c = tmp.getContext('2d'); c.fillStyle = '#ffffff'; c.fillRect(0, 0, w, h); c.drawImage(src, 0, 0, w, h);
+    return tmp.toDataURL('image/png');
+  }
+  function rcSave() {
+    if (!rcData || rcData.mode === 'view') return rcPrint();
+    if (!rcHasDrawn) return toast('Please have the recipient sign first.', true);
+    if (!(rcData.rows && rcData.rows.length)) { rcPrint(); return; }
+    var sig = rcSignatureDataUrl();
+    setBusy('rc_save', true, 'Saving…');
+    api('saveSignature', 'POST', { rows: rcData.rows, signature: sig }).then(function () {
+      setBusy('rc_save', false, 'Save & Print');
+      (rcData.rows || []).forEach(function (rw) { var h = HISTORY.filter(function (x) { return x.row === rw; })[0]; if (h) h.signed = true; });
+      renderHistory();
+      rcData.mode = 'view'; rcData.signatureImg = sig; applyReceiptMode();
+      toast('Receipt signed & saved.', false, true);
+      setTimeout(rcPrint, 200);
+    }).catch(function (e) { setBusy('rc_save', false, 'Save & Print'); toast((e && e.message) || 'Could not save.', true); });
+  }
   function initSigPad() {
     var canvas = document.getElementById('rc_canvas');
     var rect = canvas.getBoundingClientRect();
@@ -1320,23 +1376,35 @@
     var drawing = false, last = null;
     function pos(e) { var r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
     canvas.onpointerdown = function (e) { drawing = true; last = pos(e); try { canvas.setPointerCapture(e.pointerId); } catch (_) {} e.preventDefault(); };
-    canvas.onpointermove = function (e) { if (!drawing) return; var p = pos(e); ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p; e.preventDefault(); };
+    canvas.onpointermove = function (e) {
+      if (!drawing) return; var p = pos(e); ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p;
+      if (!rcHasDrawn) { rcHasDrawn = true; document.getElementById('rc_hint').style.display = 'none'; }
+      e.preventDefault();
+    };
     canvas.onpointerup = function () { drawing = false; };
     canvas.onpointerleave = function () { drawing = false; };
     rcSig = { canvas: canvas, ctx: ctx };
   }
-  function rcClearSig() { initSigPad(); }
+  function rcClearSig() { rcHasDrawn = false; initSigPad(); var h = document.getElementById('rc_hint'); h.textContent = '✍ Sign here'; h.style.display = 'flex'; }
   // Build a receipt from a History transaction (groups a multi-item distribution).
   function openReceiptForTx(row) {
     var t = HISTORY.filter(function (x) { return x.row === row; })[0];
     if (!t) return;
     var group = HISTORY.filter(function (x) { return x.type === 'OUT' && x.party === t.party && x.timestamp === t.timestamp; });
     if (!group.length) group = [t];
-    openReceipt({
+    var base = {
       recipient: t.party, handledBy: t.handledBy, notes: t.notes,
       items: group.map(function (g) { return { item: g.item, quantity: g.quantity, unit: g.unit }; }),
-      verified: t.verified, verifiedAt: t.verifiedAt, timestamp: t.timestamp
-    });
+      verified: t.verified, verifiedAt: t.verifiedAt, timestamp: t.timestamp,
+      rows: group.map(function (g) { return g.row; })
+    };
+    if (t.signed) {
+      api('getSignature', 'GET', { row: row })
+        .then(function (r) { base.mode = 'view'; base.signatureImg = (r && r.signature) || ''; openReceipt(base); })
+        .catch(function () { base.mode = 'view'; base.signatureImg = ''; openReceipt(base); });
+    } else {
+      base.mode = 'sign'; openReceipt(base);
+    }
   }
 
   /* ---------- utils ---------- */

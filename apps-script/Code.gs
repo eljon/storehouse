@@ -25,7 +25,8 @@ const INV_HEADERS = ['ID', 'Category', 'Item', 'Notes / Size', 'Unit', 'Quantity
 const NEAR_EXPIRY_DAYS = 90;
 const TX_HEADERS  = ['Timestamp', 'Type', 'Item ID', 'Item', 'Category',
                      'Quantity', 'Unit', 'Party', 'Handled By', 'Notes', 'Balance After',
-                     'Verified', 'Verified At'];
+                     'Verified', 'Verified At', 'Signature'];
+const SIGNATURE_COL = 14;   // 1-based column of the recipient signature
 
 const APP_TITLE = "Kalayaan Ward Bishop's Storehouse";
 
@@ -126,6 +127,10 @@ function handleRequest_(e, isPost) {
         return jsonOut_(recordInput(body));
       case 'deleteItem':
         return jsonOut_(deleteItem_(body));
+      case 'saveSignature':
+        return jsonOut_(saveSignature_(body));
+      case 'getSignature':
+        return jsonOut_(getSignature_(body, params));
       default:
         return jsonOut_({ ok: false, error: 'Unknown action: ' + action });
     }
@@ -352,10 +357,43 @@ function getRecentTransactions(limit) {
       notes: r[9],
       balanceAfter: r[10],
       verified: (r[11] === 'Yes' || r[11] === true),
-      verifiedAt: r[12] ? formatTs_(r[12]) : ''
+      verifiedAt: r[12] ? formatTs_(r[12]) : '',
+      signed: !!(r[13] && String(r[13]).length)   // boolean only; image fetched on demand
     };
   });
   return out.reverse(); // newest first
+}
+
+/** Save a recipient signature (data URL) onto the given transaction rows. */
+function saveSignature_(payload) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    payload = payload || {};
+    var sig = String(payload.signature || '');
+    if (!sig) throw new Error('No signature provided.');
+    var rows = payload.rows || [];
+    if (!rows.length) throw new Error('No transaction rows to sign.');
+    const sheet = mustSheet_(TX_SHEET);
+    const last = sheet.getLastRow();
+    var n = 0;
+    rows.forEach(function (r) {
+      r = Number(r);
+      if (r >= 2 && r <= last) { sheet.getRange(r, SIGNATURE_COL).setValue(sig); n++; }
+    });
+    return { ok: true, saved: n };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** Fetch the signature image (data URL) for a single transaction row. */
+function getSignature_(body, params) {
+  var row = Number((body && body.row) || (params && params.row));
+  const sheet = mustSheet_(TX_SHEET);
+  const last = sheet.getLastRow();
+  if (!(row >= 2 && row <= last)) return { ok: false, error: 'Transaction not found.' };
+  return { ok: true, signature: sheet.getRange(row, SIGNATURE_COL).getValue() || '' };
 }
 
 /**
@@ -452,17 +490,20 @@ function recordOutput(payload) {
       values[i][5] = balanceAfter;
       txRows.push([ts, 'OUT', values[i][0], values[i][2], values[i][1],
                    want, values[i][4], recipient, handledBy, notes, balanceAfter,
-                   verified ? 'Yes' : 'No', verified ? ts : '']);
+                   verified ? 'Yes' : 'No', verified ? ts : '', '']);
     });
 
     range.setValues(values);
+    const startRow = mustSheet_(TX_SHEET).getLastRow() + 1;   // rows about to be appended
     appendTransactions_(txRows);
+    const createdRows = txRows.map(function (_, i) { return startRow + i; });
 
     return {
       ok: true,
       message: 'Distributed ' + lines.length + ' item(s) to ' + recipient + '.' +
                (verified ? ' Verified by the Bishop.' : ''),
       verified: verified,
+      rows: createdRows,           // so the receipt can attach a signature
       dashboard: getDashboard()
     };
   } finally {
@@ -538,7 +579,7 @@ function recordInput(payload) {
     appendTransactions_([[
       ts, 'IN', itemId, itemName, category,
       qty, unit, source, handledBy, expNote, balanceAfter,
-      verified ? 'Yes' : 'No', verified ? ts : ''
+      verified ? 'Yes' : 'No', verified ? ts : '', ''
     ]]);
 
     return {
@@ -589,7 +630,7 @@ function deleteItem_(payload) {
     // Log the removal as an OUT of the remaining stock.
     appendTransactions_([[
       ts, 'OUT', r[0], r[2], r[1], qty, r[4], reason, handledBy,
-      'Item deleted from inventory', 0, verified ? 'Yes' : 'No', verified ? ts : ''
+      'Item deleted from inventory', 0, verified ? 'Yes' : 'No', verified ? ts : '', ''
     ]]);
     sheet.deleteRow(idx + 2);   // data starts at row 2
 
