@@ -10,12 +10,12 @@ no billing** — anywhere.
 | Function | What it does |
 |----------|--------------|
 | 📦 **Check inventory** | Browse current stock as a card grid, search, filter by category, and spot **LOW / OUT OF STOCK** and **expiry** status at a glance. Tap a card for its full history + quick actions. |
-| 🗂️ **Item detail** | Tapping a product card opens a modal with that item's **history** and quick **Take out / Receive / Delete** actions (delete is recorded as an output of the remaining stock). |
-| 📤 **Record output** | Log items leaving the storehouse — recipient name + one or more items picked with a **type-to-search** selector (shows live stock). Stock is validated so you can't over-issue. |
-| 📥 **Record input** | Log items received — find an item with the **searchable** picker, or add a brand-new item on the fly. Optionally set/update an **expiry date**. |
+| 🗂️ **Item detail** | Tapping a product card opens a modal with that item's **history** and quick **Stock Out / Stock In / Delete** actions (delete is recorded as a stock out of the remaining stock). |
+| 📤 **Stock Out** | Log items leaving the storehouse — recipient name + one or more items picked with a **type-to-search** selector (shows live stock). Stock is validated so you can't over-issue. |
+| 📥 **Stock In** | Log items received — find an item with the **searchable** picker, or add a brand-new item on the fly. Optionally set/update an **expiry date**. |
 | ⏰ **Expiry tracking** | Each item can carry an expiry date. Every card shows a human-readable countdown (*Expires in 1 yr 2 mo*, *Expired 6 days ago*). Items due within **3 months** (or already expired) are flagged and counted; tapping the Near-expiry tile lists **all dated items, soonest first**. |
 | ✅ **Bishop's verification** | Sign off a transaction with the Bishop's password — while recording, or later from History (a **Verify** button on unverified rows). Each verification is stamped with a date/time. |
-| 🕘 **History** | Full log of every movement with **All / Output / Input** and **Verified / Unverified** filters and a search box (by item, recipient, source, or worker), grouped by date. |
+| 🕘 **History** | Full log of every movement with **All / Stock In / Stock Out** and **Verified / Unverified** filters and a search box (by item, recipient, source, or worker), grouped by date. |
 
 **Dashboard tiles** at the top show Items, **Near expiry (≤ 3 months)**, Low
 stock, and Out of stock — the Near expiry / Low / Out tiles are **tap-to-filter**

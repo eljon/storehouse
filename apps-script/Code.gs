@@ -460,7 +460,7 @@ function recordOutput(payload) {
 
     return {
       ok: true,
-      message: 'Recorded output of ' + lines.length + ' item(s) to ' + recipient + '.' +
+      message: 'Recorded stock out of ' + lines.length + ' item(s) to ' + recipient + '.' +
                (verified ? ' Verified by the Bishop.' : ''),
       verified: verified,
       dashboard: getDashboard()
@@ -543,7 +543,7 @@ function recordInput(payload) {
 
     return {
       ok: true,
-      message: 'Recorded input of ' + qty + ' ' + unit + ' of "' + itemName + '".' +
+      message: 'Recorded stock in of ' + qty + ' ' + unit + ' of "' + itemName + '".' +
                (verified ? ' Verified by the Bishop.' : ''),
       verified: verified,
       dashboard: getDashboard()
@@ -563,7 +563,13 @@ function deleteItem_(payload) {
   lock.waitLock(20000);
   try {
     payload = payload || {};
-    const verified = isBishopVerified_(payload);
+    // Deleting requires the Bishop's password (authoritative check).
+    var pw = payload.verifyPassword;
+    if (pw === undefined || pw === null || pw === '') {
+      throw new Error("The Bishop's password is required to delete an item.");
+    }
+    if (String(pw) !== BISHOP_PASSWORD) throw new Error('Incorrect password.');
+    const verified = true;
     const handledBy = String(payload.handledBy || '').trim();
     const reason = String(payload.reason || '').trim() || 'Deleted';
 
@@ -589,7 +595,7 @@ function deleteItem_(payload) {
 
     return {
       ok: true,
-      message: 'Deleted "' + r[2] + '" — recorded as output of ' + qty + ' ' + r[4] + '.' +
+      message: 'Deleted "' + r[2] + '" — recorded as stock out of ' + qty + ' ' + r[4] + '.' +
                (verified ? ' Verified by the Bishop.' : ''),
       verified: verified,
       dashboard: getDashboard()

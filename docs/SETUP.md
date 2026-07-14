@@ -89,15 +89,15 @@ That's it — bookmark the Pages URL / add it to your home screen.
 
 - **📦 Inventory** — a card grid; search or filter by category. Items below their
   target show a **LOW** badge; empty ones show **OUT**. **Tap any card** to open
-  its detail: the item's full **history** plus quick **Take out / Receive /
-  Delete** actions. *Delete* removes the item and is recorded as an **output** of
+  its detail: the item's full **history** plus quick **Stock Out / Stock In /
+  Delete** actions. *Delete* (Bishop's password required) removes the item and is recorded as a **stock out** of
   whatever stock was left.
-- **📤 Output** — enter the recipient, then **type to search** for each item
+- **📤 Stock Out** — enter the recipient, then **type to search** for each item
   taken (the picker shows current stock), add a quantity, **+ Add item** for
-  more → **Record Output**. You can't issue more than is in stock.
-- **📥 Input** — type to search for an item (or pick **➕ Add a NEW item**), enter
+  more → **Record stock out**. You can't issue more than is in stock.
+- **📥 Stock In** — type to search for an item (or pick **➕ Add a NEW item**), enter
   the quantity received and the source, and optionally an **expiry date** →
-  **Record Input**. (Leaving expiry blank keeps the item's current date.)
+  **Record stock in**. (Leaving expiry blank keeps the item's current date.)
 - **⏰ Expiry** — every item with a date shows a human-readable countdown
   (e.g. *Expires in 1 yr 2 mo*, *Expires in 28 days*, or *Expired 6 days ago*).
   The top **Near expiry** tile counts items due within 3 months (or already
@@ -105,10 +105,10 @@ That's it — bookmark the Pages URL / add it to your home screen.
   The **Low stock** and **Out of stock** tiles are tap-to-filter too.
 - **✅ Bishop's verification** — sign off a transaction with the Bishop's
   password. Do it **while recording** (the **Bishop's verification** button on
-  the Output/Input forms) or **later from History** (the **Verify** button on
+  the Stock Out / Stock In forms) or **later from History** (the **Verify** button on
   any unverified row). Each verification is stamped with the date and time.
-- **🕘 History** — every movement in one place. Filter by **All / Output /
-  Input**, by **Verified / Unverified**, or use the search box (item,
+- **🕘 History** — every movement in one place. Filter by **All / Stock In /
+  Stock Out**, by **Verified / Unverified**, or use the search box (item,
   recipient, source, worker). Verified rows show when they were verified.
 
 Every input/output is written to the **Transactions** tab with a timestamp, so
