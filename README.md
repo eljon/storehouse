@@ -9,10 +9,15 @@ no billing** — anywhere.
 
 | Function | What it does |
 |----------|--------------|
-| 📦 **Check inventory** | Browse current stock, search, filter by category, and spot **LOW** / **OUT OF STOCK** items at a glance. |
+| 📦 **Check inventory** | Browse current stock, search, filter by category, and spot **IN / LOW / OUT OF STOCK** and **expiry** status at a glance. |
 | 📤 **Record output** | Log items leaving the storehouse — recipient name + one or more items picked with a **type-to-search** selector (shows live stock). Stock is validated so you can't over-issue. |
-| 📥 **Record input** | Log items received — find an item with the **searchable** picker, or add a brand-new item on the fly. |
+| 📥 **Record input** | Log items received — find an item with the **searchable** picker, or add a brand-new item on the fly. Optionally set/update an **expiry date**. |
+| ⏰ **Expiry tracking** | Each item can carry an expiry date. Items expiring within **3 months** (or already expired) are flagged on the item and counted in the dashboard. |
 | 🕘 **History** | Full log of every movement with **All / Output / Input** filters and a search box (by item, recipient, source, or worker), grouped by date. |
+
+**Dashboard tiles** at the top show Items, **Near expiry (≤ 3 months)**, Low
+stock, and Out of stock — the Near expiry / Low / Out tiles are **tap-to-filter**
+(they jump to Inventory showing just those items; Near expiry is sorted soonest-first).
 
 Every input and output is appended to a **Transactions** log (timestamp, type,
 item, quantity, party, handled-by, running balance) for a full audit trail.
@@ -39,7 +44,7 @@ with no server of our own and no Cloud Console.
 
 The Google Sheet has two tabs, created automatically by `setup()`:
 
-- **`Inventory`** — `ID · Category · Item · Notes/Size · Unit · Quantity · Target`
+- **`Inventory`** — `ID · Category · Item · Notes/Size · Unit · Quantity · Target · Expiry`
 - **`Transactions`** — `Timestamp · Type · Item ID · Item · Category · Quantity · Unit · Party · Handled By · Notes · Balance After`
 
 The app is **seeded** from the ward's *Emergency Prep Shopping Checklist*

@@ -93,7 +93,11 @@ That's it — bookmark the Pages URL / add it to your home screen.
   taken (the picker shows current stock), add a quantity, **+ Add item** for
   more → **Record Output**. You can't issue more than is in stock.
 - **📥 Input** — type to search for an item (or pick **➕ Add a NEW item**), enter
-  the quantity received and the source → **Record Input**.
+  the quantity received and the source, and optionally an **expiry date** →
+  **Record Input**. (Leaving expiry blank keeps the item's current date.)
+- **⏰ Expiry** — the top **Near expiry** tile counts items expiring within 3
+  months (or already expired). Tap it to see just those items, soonest first.
+  The **Low stock** and **Out of stock** tiles are tap-to-filter too.
 - **🕘 History** — every movement in one place. Tap **All / Output / Input** to
   filter, or use the search box (item, recipient, source, worker).
 
@@ -119,6 +123,11 @@ you always have a full paper trail.
 
 ## Notes
 
+- **Already set up before the Expiry feature?** Re-paste the latest
+  `apps-script/Code.gs`, save, then run **🏬 Storehouse → ① Set up / load
+  starting data** once. It adds the **Expiry** column header to your existing
+  Inventory sheet without touching your data. Then publish a **new version** of
+  the Web app (*Deploy → Manage deployments → ✏️ → New version → Deploy*).
 - **`setup()` is safe to re-run** — it won't wipe an Inventory tab that already
   has data, and never touches your Transactions log.
 - Starting quantities double as **target / par levels** for the low-stock

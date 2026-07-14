@@ -19,7 +19,10 @@
 const INVENTORY_SHEET = 'Inventory';
 const TX_SHEET        = 'Transactions';
 
-const INV_HEADERS = ['ID', 'Category', 'Item', 'Notes / Size', 'Unit', 'Quantity', 'Target'];
+const INV_HEADERS = ['ID', 'Category', 'Item', 'Notes / Size', 'Unit', 'Quantity', 'Target', 'Expiry'];
+
+// Items expiring within this many days count as "near expiry".
+const NEAR_EXPIRY_DAYS = 90;
 const TX_HEADERS  = ['Timestamp', 'Type', 'Item ID', 'Item', 'Category',
                      'Quantity', 'Unit', 'Party', 'Handled By', 'Notes', 'Balance After'];
 
@@ -170,12 +173,16 @@ function setup() {
   ensureHeaders_(inv, INV_HEADERS);
   ensureHeaders_(tx,  TX_HEADERS);
 
+  // Keep the header row current (adds the Expiry column to older sheets).
+  inv.getRange(1, 1, 1, INV_HEADERS.length).setValues([INV_HEADERS]);
+
   // Seed inventory only when there is no data yet (headers only).
   var seeded = false;
   if (inv.getLastRow() <= 1) {
     const rows = SEED_DATA.map(function (r, i) {
       const id = i + 1;                       // ID
-      return [id, r[0], r[1], r[2], r[3], r[4], r[4]]; // Quantity & Target = checklist qty
+      // Quantity & Target = checklist qty; Expiry blank (set it as you restock).
+      return [id, r[0], r[1], r[2], r[3], r[4], r[4], ''];
     });
     inv.getRange(2, 1, rows.length, INV_HEADERS.length).setValues(rows);
     SpreadsheetApp.flush();                   // force the writes to appear immediately
@@ -230,6 +237,8 @@ function getInventory() {
   const items = values
     .filter(function (r) { return r[0] !== '' && r[0] !== null; })
     .map(function (r) {
+      const expiry = toDateStr_(r[7]);
+      const exp = expiryInfo_(expiry);
       return {
         id: r[0],
         category: r[1],
@@ -237,7 +246,10 @@ function getInventory() {
         notes: r[3],
         unit: r[4],
         quantity: Number(r[5]) || 0,
-        target: Number(r[6]) || 0
+        target: Number(r[6]) || 0,
+        expiry: expiry,                 // 'yyyy-MM-dd' or ''
+        daysToExpiry: exp.days,         // number or null
+        expStatus: exp.status           // 'expired' | 'near' | 'ok' | 'none'
       };
     });
 
@@ -248,6 +260,33 @@ function getInventory() {
   return items;
 }
 
+/** Normalizes a sheet expiry cell (Date or text) to 'yyyy-MM-dd' or ''. */
+function toDateStr_(v) {
+  if (v === '' || v === null || v === undefined) return '';
+  if (Object.prototype.toString.call(v) === '[object Date]') {
+    return Utilities.formatDate(v, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  }
+  var s = String(v).trim();
+  var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) {
+    return m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
+  }
+  return s; // leave anything unexpected as-is
+}
+
+/** Days until an expiry date and a status bucket. */
+function expiryInfo_(dateStr) {
+  if (!dateStr) return { days: null, status: 'none' };
+  var m = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return { days: null, status: 'none' };
+  var exp = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  var now = new Date();
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var days = Math.round((exp.getTime() - today.getTime()) / 86400000);
+  var status = days < 0 ? 'expired' : (days <= NEAR_EXPIRY_DAYS ? 'near' : 'ok');
+  return { days: days, status: status };
+}
+
 /** Convenience payload the web UI loads on start / after each change. */
 function getDashboard() {
   const items = getInventory();
@@ -255,11 +294,13 @@ function getDashboard() {
   items.forEach(function (it) {
     if (categories.indexOf(it.category) === -1) categories.push(it.category);
   });
-  var lowStock = 0, outOfStock = 0, totalUnits = 0;
+  var lowStock = 0, outOfStock = 0, totalUnits = 0, nearExpiry = 0, expired = 0;
   items.forEach(function (it) {
     totalUnits += it.quantity;
     if (it.quantity <= 0) outOfStock++;
     else if (it.target > 0 && it.quantity < it.target) lowStock++;
+    if (it.expStatus === 'expired') { expired++; nearExpiry++; }
+    else if (it.expStatus === 'near') nearExpiry++;
   });
   return {
     items: items,
@@ -268,7 +309,9 @@ function getDashboard() {
       distinctItems: items.length,
       totalUnits: totalUnits,
       lowStock: lowStock,
-      outOfStock: outOfStock
+      outOfStock: outOfStock,
+      nearExpiry: nearExpiry,   // expiring within 90 days, incl. already expired
+      expired: expired
     }
   };
 }
@@ -379,6 +422,7 @@ function recordOutput(payload) {
  *   source: String,      // where it came from (donor / purchase)
  *   handledBy: String,
  *   notes: String,
+ *   expiry: String,      // optional 'yyyy-MM-dd'; when set, updates the item's expiry
  *   // only when id is null (new item):
  *   category, item, unit, itemNotes, target
  * }
@@ -393,6 +437,7 @@ function recordInput(payload) {
     const source    = String(payload.source || '').trim();
     const handledBy = String(payload.handledBy || '').trim();
     const notes     = String(payload.notes || '').trim();
+    const expiry    = normExpiryInput_(payload.expiry);
 
     if (!(qty > 0)) throw new Error('Please enter a quantity greater than zero.');
 
@@ -411,6 +456,7 @@ function recordInput(payload) {
       if (i === -1) throw new Error('Item not found (ID ' + payload.id + '). Try refreshing.');
       balanceAfter = (Number(values[i][5]) || 0) + qty;
       values[i][5] = balanceAfter;
+      if (expiry) values[i][7] = expiry;   // update expiry only when provided
       itemId = values[i][0];
       itemName = values[i][2];
       category = values[i][1];
@@ -427,12 +473,13 @@ function recordInput(payload) {
 
       itemId = nextId_(values);
       balanceAfter = qty;
-      sheet.appendRow([itemId, category, itemName, itemNotes, unit, qty, target]);
+      sheet.appendRow([itemId, category, itemName, itemNotes, unit, qty, target, expiry]);
     }
 
+    var expNote = expiry ? (notes ? notes + ' ' : '') + '(exp ' + expiry + ')' : notes;
     appendTransactions_([[
       new Date(), 'IN', itemId, itemName, category,
-      qty, unit, source, handledBy, notes, balanceAfter
+      qty, unit, source, handledBy, expNote, balanceAfter
     ]]);
 
     return {
@@ -451,6 +498,15 @@ function mustSheet_(name) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
   if (!sheet) throw new Error('Sheet "' + name + '" is missing. Run setup() once from the editor.');
   return sheet;
+}
+
+/** Accepts '' or a 'yyyy-MM-dd' string; returns a clean 'yyyy-MM-dd' or ''. */
+function normExpiryInput_(v) {
+  if (v === '' || v === null || v === undefined) return '';
+  var s = String(v).trim();
+  var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (!m) throw new Error('Expiry date must look like YYYY-MM-DD.');
+  return m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
 }
 
 function appendTransactions_(rows) {
