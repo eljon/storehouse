@@ -103,6 +103,11 @@ That's it — bookmark the Pages URL / add it to your home screen.
   The top **Near expiry** tile counts items due within 3 months (or already
   expired); tap it to see **all items that have an expiry date, soonest first**.
   The **Low stock** and **Out of stock** tiles are tap-to-filter too.
+- **🧾 Receipts** — when distributing, choose **Save & print** (opens a
+  printable receipt) or **Save only**. The receipt lists all items, has a
+  **signature pad** for the recipient (mouse or finger), and shows **Bishop
+  Eljon Serrano's** signature when the transaction is verified. You can also
+  reprint a receipt from any Distribute row in **History**.
 - **✅ Bishop's verification** — sign off a transaction with the Bishop's
   password. Do it **while recording** (the **Bishop's verification** button on
   the Distribute / Restock forms) or **later from History** (the **Verify** button on

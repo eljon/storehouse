@@ -14,6 +14,7 @@ no billing** — anywhere.
 | 📤 **Distribute** | Log items leaving the storehouse — recipient name + one or more items picked with a **type-to-search** selector (shows live stock). Stock is validated so you can't over-issue. |
 | 📥 **Restock** | Log items received — find an item with the **searchable** picker, or add a brand-new item on the fly. Optionally set/update an **expiry date**. |
 | ⏰ **Expiry tracking** | Each item can carry an expiry date. Every card shows a human-readable countdown (*Expires in 1 yr 2 mo*, *Expired 6 days ago*). Items due within **3 months** (or already expired) are flagged and counted; tapping the Near-expiry tile lists **all dated items, soonest first**. |
+| 🧾 **Distribution receipt** | Distribute with **Save & print** or **Save only**. The receipt shows all details, a **signature pad** the recipient signs (mouse/finger), and — when the transaction is verified — **Bishop Eljon Serrano's** signature. Also reprintable per transaction from History. |
 | ✅ **Bishop's verification** | Sign off a transaction with the Bishop's password — while recording, or later from History (a **Verify** button on unverified rows). Each verification is stamped with a date/time. |
 | 🕘 **History** | Full log of every movement with **All / Restock / Distribute** and **Verified / Unverified** filters and a search box (by item, recipient, source, or worker), grouped by date. |
 

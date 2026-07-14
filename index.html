@@ -8,7 +8,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23034078'/%3E%3Cg fill='none' stroke='%23E4DFDA' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 8l-8-4-8 4 8 4 8-4z'/%3E%3Cpath d='M4 8v8l8 4 8-4V8'/%3E%3Cpath d='M12 12v8'/%3E%3C/g%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Great+Vibes&display=swap" rel="stylesheet">
   <style>
     :root {
       --navy: #034078; --navy-deep: #011D4D; --navy-hover: #023460;
@@ -225,7 +225,7 @@
     .vtag svg { width:11px; height:11px; }
     .vtag.ok { background:var(--ok-bg); color:var(--ok); }
     .vtag.muted { background:#eef0f3; color:var(--muted); }
-    .tx .vwrap { flex:none; display:flex; align-items:center; }
+    .tx .vwrap { flex:none; display:flex; flex-direction:column; gap:6px; align-items:flex-end; justify-content:center; }
     .vbtn { display:inline-flex; align-items:center; gap:5px; background:#fff; border:1px solid var(--navy);
       color:var(--navy); font-weight:700; font-size:11px; padding:6px 11px; border-radius:999px; cursor:pointer; white-space:nowrap; transition:.14s; }
     .vbtn:hover { background:var(--navy); color:#fff; }
@@ -249,6 +249,49 @@
     button.primary.danger { background:var(--danger); box-shadow:0 4px 14px rgba(178,59,59,.24); }
     button.primary.danger:hover { background:#9c3230; }
     #im_history { max-height:240px; overflow-y:auto; margin-top:2px; }
+
+    /* distribution receipt */
+    #receiptModal { z-index: 300; }
+    .rc-sheet { max-width: 640px; position: relative; padding: 0; overflow: hidden; }
+    .rc-controls { display:flex; gap:10px; align-items:center; padding: 14px 16px; border-bottom:1px solid var(--line); background:var(--bg); }
+    .rc-controls .im-x { position:static; margin-left:auto; }
+    .receipt { padding: 26px 28px 30px; color:#1a1a1a; font-size:13.5px; }
+    .rc-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; border-bottom:2px solid #0d1b2a; padding-bottom:14px; }
+    .rc-brand { display:flex; align-items:center; gap:12px; }
+    .rc-logo { width:40px; height:40px; border-radius:10px; background:#e6f2f6; display:grid; place-items:center; flex:none; }
+    .rc-logo svg { width:24px; height:24px; }
+    .rc-org { font-weight:700; font-size:15px; letter-spacing:-.01em; color:#0d1b2a; }
+    .rc-title { font-size:12px; text-transform:uppercase; letter-spacing:.12em; color:#5b6675; margin-top:2px; }
+    .rc-no { text-align:right; font-size:11.5px; color:#5b6675; }
+    .rc-meta { display:grid; grid-template-columns:1fr 1fr; gap:6px 18px; margin:16px 0 18px; font-size:13px; }
+    .rc-meta .k { color:#5b6675; } .rc-meta b { color:#0d1b2a; }
+    .rc-table { width:100%; border-collapse:collapse; margin-bottom:14px; }
+    .rc-table th { text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:#5b6675; border-bottom:1px solid #d7dbe0; padding:7px 6px; }
+    .rc-table td { padding:8px 6px; border-bottom:1px solid #eceff2; font-size:13.5px; }
+    .rc-table .rc-c { text-align:center; }
+    .rc-notes { font-size:12.5px; color:#333; margin-bottom:18px; min-height:1px; }
+    .rc-notes b { color:#5b6675; font-weight:600; }
+    .rc-sigs { display:grid; grid-template-columns:1fr 1fr; gap:26px; margin-top:26px; }
+    .rc-sig-box { height:78px; display:flex; align-items:flex-end; justify-content:center; }
+    #rc_canvas { width:100%; height:78px; touch-action:none; cursor:crosshair; }
+    .rc-sig-line { border-top:1.5px solid #0d1b2a; margin-top:2px; }
+    .rc-sig-cap { font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:#5b6675; margin-top:6px; }
+    .rc-sig-name { font-size:13px; font-weight:600; color:#0d1b2a; margin-top:2px; min-height:16px; }
+    .rc-sig-script { font-family:'Great Vibes','Snell Roundhand','Brush Script MT',cursive; font-size:38px; line-height:1; color:#123a63; transform:rotate(-3deg); padding-bottom:4px; }
+    .rc-sig-pending { font-size:12px; color:#b23b3b; font-style:italic; align-self:center; }
+    .rc-foot { margin-top:22px; padding-top:12px; border-top:1px solid #eceff2; font-size:11px; color:#77726a; text-align:center; }
+    .rc-btn { display:inline-flex; align-items:center; gap:5px; background:#fff; border:1px solid var(--navy);
+      color:var(--navy); font-weight:700; font-size:11px; padding:6px 11px; border-radius:999px; cursor:pointer; white-space:nowrap; }
+    .rc-btn:hover { background:var(--navy); color:#fff; }
+    @media (max-width: 560px) { .rc-meta, .rc-sigs { grid-template-columns:1fr; } }
+
+    @media print {
+      body.rc-open > *:not(#receiptModal) { display:none !important; }
+      body.rc-open #receiptModal { position:static !important; display:block !important; background:#fff; padding:0; overflow:visible; }
+      body.rc-open #receiptModal .rc-sheet { box-shadow:none; border:0; max-width:none; border-radius:0; }
+      body.rc-open #receiptModal .rc-controls { display:none !important; }
+      @page { margin: 14mm; }
+    }
     .hist-date { font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
       color: var(--navy-deep); margin: 20px 2px 8px; }
     .tx { font-size: 13.5px; padding: 13px 2px; border-bottom:1px solid var(--line); display:flex; gap:12px; }
@@ -337,6 +380,55 @@
     </div>
   </div>
 
+  <!-- ============ DISTRIBUTION RECEIPT ============ -->
+  <div class="overlay" id="receiptModal">
+    <div class="sheet rc-sheet">
+      <div class="rc-controls">
+        <button class="ghost" onclick="rcClearSig()">Clear signature</button>
+        <button class="primary" style="width:auto" onclick="rcPrint()">🖨 Print</button>
+        <button class="im-x" title="Close" onclick="rcClose()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <div class="receipt" id="rc_doc">
+        <div class="rc-head">
+          <div class="rc-brand">
+            <div class="rc-logo"><svg viewBox="0 0 24 24" fill="none" stroke="#034078" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 8l-8-4-8 4 8 4 8-4z"/><path d="M4 8v8l8 4 8-4V8"/><path d="M12 12v8"/></svg></div>
+            <div>
+              <div class="rc-org">Kalayaan Ward Bishop's Storehouse</div>
+              <div class="rc-title">Distribution Receipt</div>
+            </div>
+          </div>
+          <div class="rc-no" id="rc_no"></div>
+        </div>
+
+        <div class="rc-meta" id="rc_meta"></div>
+
+        <table class="rc-table">
+          <thead><tr><th>Item</th><th class="rc-c">Qty</th><th>Unit</th></tr></thead>
+          <tbody id="rc_items"></tbody>
+        </table>
+
+        <div class="rc-notes" id="rc_notes"></div>
+
+        <div class="rc-sigs">
+          <div class="rc-sig">
+            <div class="rc-sig-box"><canvas id="rc_canvas"></canvas></div>
+            <div class="rc-sig-line"></div>
+            <div class="rc-sig-cap">Recipient's signature</div>
+            <div class="rc-sig-name" id="rc_recipient_name"></div>
+          </div>
+          <div class="rc-sig">
+            <div class="rc-sig-box" id="rc_bishop_box"></div>
+            <div class="rc-sig-line"></div>
+            <div class="rc-sig-cap">Bishop's verification</div>
+            <div class="rc-sig-name" id="rc_bishop_name"></div>
+          </div>
+        </div>
+
+        <div class="rc-foot">This receipt acknowledges the items above were received from the Kalayaan Ward Bishop's Storehouse.</div>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ ITEM MODAL ============ -->
   <div class="overlay" id="itemModal">
     <div class="sheet im-sheet">
@@ -371,7 +463,8 @@
 
       <div class="field"><label id="im_pw_label">Bishop's password (optional)</label>
         <input id="im_pw" type="password" autocomplete="off" placeholder="Verify this transaction"></div>
-      <button class="primary" id="im_submit" onclick="imSubmit()">Distribute</button>
+      <button class="primary" id="im_submit" onclick="imPrimary()">Save &amp; print receipt</button>
+      <button class="ghost" id="im_saveonly" onclick="imSubmit(false)" style="width:100%; margin-top:9px; display:none">Save only</button>
       <div class="statusline" id="im_msg"></div>
 
       <hr class="soft">
@@ -448,7 +541,8 @@
               <button type="button" class="linkbtn" style="color:var(--muted)" onclick="verifyReset('o')">Undo</button>
             </div>
           </div>
-          <button class="primary" id="o_submit" onclick="submitOutput()">Distribute</button>
+          <button class="primary" id="o_submit" onclick="submitOutput(true)">Save &amp; print receipt</button>
+          <button class="ghost" id="o_saveonly" onclick="submitOutput(false)" style="width:100%; margin-top:9px">Save only</button>
         </div>
       </section>
 
@@ -910,24 +1004,32 @@
     div.appendChild(sel); div.appendChild(num); div.appendChild(rm);
     document.getElementById('outLines').appendChild(div);
   }
-  function submitOutput() {
+  function submitOutput(print) {
     if (busy) return;
+    var btnId = print ? 'o_submit' : 'o_saveonly';
+    var label = print ? 'Save & print receipt' : 'Save only';
     var recipient = val('o_recipient');
     if (!recipient) return toast('Enter the recipient name.', true);
-    var lines = [], ok = true;
+    var lines = [], receiptItems = [], ok = true;
     document.querySelectorAll('#outLines .lineitem').forEach(function (row) {
       var id = row.querySelector('.combo').dataset.value;
       var qty = Number(row.querySelector('.ol-qty').value);
       if (!id && !qty) return;
       if (!id || !(qty > 0)) { ok = false; return; }
       lines.push({ id: Number(id), quantity: qty });
+      var it = DATA.items.filter(function (i) { return String(i.id) === String(id); })[0] || {};
+      receiptItems.push({ item: it.item || ('#' + id), quantity: qty, unit: it.unit || '' });
     });
     if (!ok) return toast('Each item row needs both an item and a quantity.', true);
     if (!lines.length) return toast('Add at least one item.', true);
-    setBusy('o_submit', true, 'Recording…');
+    var receipt = { recipient: recipient, handledBy: val('o_handled'), notes: val('o_notes'), items: receiptItems, timestamp: nowStr() };
+    setBusy(btnId, true, 'Saving…');
     api('output', 'POST', { recipient: recipient, handledBy: val('o_handled'), notes: val('o_notes'), lines: lines, verifyPassword: verifyPw.o })
-      .then(function (res) { afterWrite('o_submit', 'Distribute', res, resetOutput); })
-      .catch(function (e) { afterErr('o_submit', 'Distribute', e); });
+      .then(function (res) {
+        afterWrite(btnId, label, res, resetOutput);
+        if (print) { receipt.verified = !!(res && res.verified); receipt.verifiedAt = (res && res.verified) ? nowStr() : ''; openReceipt(receipt); }
+      })
+      .catch(function (e) { afterErr(btnId, label, e); });
   }
   function resetOutput() {
     ['o_recipient', 'o_handled', 'o_notes'].forEach(function (id) { document.getElementById(id).value = ''; });
@@ -1051,7 +1153,9 @@
       '<div class="d"><div class="t">' + t.quantity + ' ' + esc(plural(t.unit, t.quantity)) + ' — ' + esc(t.item) + '</div>' +
       '<div class="s">' + esc(party) + (t.handledBy ? (' · by ' + esc(t.handledBy)) : '') + esc(bal) +
       ' · ' + esc(timeOf(t.timestamp)) + vinfo + '</div></div>' +
-      '<div class="vwrap">' + verifyCell(t) + '</div></div>';
+      '<div class="vwrap">' + verifyCell(t) +
+      (t.type === 'OUT' ? '<button class="rc-btn" type="button" onclick="openReceiptForTx(' + t.row + ')">Receipt</button>' : '') +
+      '</div></div>';
   }
   function renderHistory() {
     var nAll = HISTORY.length, nOut = 0, nIn = 0, nVer = 0, nUn = 0;
@@ -1105,47 +1209,51 @@
     document.getElementById('im_in').style.display = m === 'in' ? 'block' : 'none';
     document.getElementById('im_del').style.display = m === 'del' ? 'block' : 'none';
     var btn = document.getElementById('im_submit');
-    btn.textContent = (m === 'out') ? 'Distribute' : (m === 'in') ? 'Restock' : 'Delete item';
+    btn.textContent = (m === 'out') ? 'Save & print receipt' : (m === 'in') ? 'Restock' : 'Delete item';
     btn.classList.toggle('danger', m === 'del');
+    document.getElementById('im_saveonly').style.display = (m === 'out') ? 'block' : 'none';
     document.getElementById('im_pw_label').textContent = (m === 'del')
       ? "Bishop's password (required)" : "Bishop's password (optional)";
     document.getElementById('im_msg').textContent = '';
   }
   function imErr(msg) { var el = document.getElementById('im_msg'); el.className = 'statusline err'; el.textContent = msg; }
-  function imSubmit() {
+  function imPrimary() { imSubmit(imMode === 'out'); }   // print a receipt only for a distribution
+  function imSubmit(print) {
     if (busy || !imItem) return;
     var pw = val('im_pw');
     if (imMode === 'out') {
       var recipient = val('im_o_recipient'), q = Number(val('im_o_qty'));
       if (!recipient) return imErr('Enter the recipient name.');
       if (!(q > 0)) return imErr('Enter a quantity greater than zero.');
-      imCall('output', { recipient: recipient, handledBy: val('im_o_handled'), lines: [{ id: imItem.id, quantity: q }], verifyPassword: pw }, false);
+      var receipt = print ? { recipient: recipient, handledBy: val('im_o_handled'), notes: '', items: [{ item: imItem.item, quantity: q, unit: imItem.unit }], timestamp: nowStr() } : null;
+      imCall('output', { recipient: recipient, handledBy: val('im_o_handled'), lines: [{ id: imItem.id, quantity: q }], verifyPassword: pw }, false, receipt, print ? 'im_submit' : 'im_saveonly');
     } else if (imMode === 'in') {
       var qi = Number(val('im_i_qty'));
       if (!(qi > 0)) return imErr('Enter a quantity greater than zero.');
-      imCall('input', { id: imItem.id, quantity: qi, source: val('im_i_source'), expiry: val('im_i_expiry'), verifyPassword: pw }, false);
+      imCall('input', { id: imItem.id, quantity: qi, source: val('im_i_source'), expiry: val('im_i_expiry'), verifyPassword: pw }, false, null, 'im_submit');
     } else {
       if (!pw) return imErr("The Bishop's password is required to delete an item.");
-      imCall('deleteItem', { id: imItem.id, reason: val('im_d_reason'), verifyPassword: pw }, true);
+      imCall('deleteItem', { id: imItem.id, reason: val('im_d_reason'), verifyPassword: pw }, true, null, 'im_submit');
     }
   }
-  function imCall(action, payload, closeAfter) {
+  function imCall(action, payload, closeAfter, receipt, btnId) {
+    btnId = btnId || 'im_submit';
     var msg = document.getElementById('im_msg'); msg.className = 'statusline'; msg.textContent = 'Saving…';
-    setBusy('im_submit', true, 'Saving…');
-    var label = (imMode === 'out') ? 'Distribute' : (imMode === 'in') ? 'Restock' : 'Delete item';
+    var restore = document.getElementById(btnId).textContent;
+    setBusy(btnId, true, 'Saving…');
     api(action, 'POST', payload).then(function (res) {
-      setBusy('im_submit', false, label);
+      setBusy(btnId, false, restore);
       if (res && res.dashboard) onData(res.dashboard);
       loadHistory();
       toast((res && res.message) || 'Saved.', false, true);
+      if (receipt) { receipt.verified = !!(res && res.verified); receipt.verifiedAt = (res && res.verified) ? nowStr() : ''; openReceipt(receipt); }
       if (closeAfter) { imClose(); return; }
-      // refresh header + clear the just-used inputs; history refreshes via loadHistory
       imItem = DATA.items.filter(function (i) { return String(i.id) === String(imItem.id); })[0];
       if (!imItem) { imClose(); return; }
       document.getElementById('im_meta').innerHTML = imMetaHtml(imItem);
       ['im_o_recipient', 'im_o_qty', 'im_i_qty', 'im_i_source', 'im_pw'].forEach(function (x) { document.getElementById(x).value = ''; });
       msg.textContent = '';
-    }).catch(function (e) { setBusy('im_submit', false, label); imErr((e && e.message) || 'Could not save.'); });
+    }).catch(function (e) { setBusy(btnId, false, restore); imErr((e && e.message) || 'Could not save.'); });
   }
   function modalTxRow(t) {
     var party = t.party ? (t.type === 'OUT' ? 'to ' + t.party : 'from ' + t.party) : '';
@@ -1161,6 +1269,74 @@
     var box = document.getElementById('im_history');
     box.innerHTML = list.length ? list.map(modalTxRow).join('')
       : '<div class="empty" style="padding:18px">No history yet for this item.</div>';
+  }
+
+  /* ---------- distribution receipt ---------- */
+  var rcSig = null;
+  function nowStr() {
+    try { return new Date().toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); }
+    catch (e) { return '' + new Date(); }
+  }
+  function receiptNo() {
+    var d = new Date(), p = function (n) { return ('0' + n).slice(-2); };
+    return 'KWS-' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+  }
+  // data = { recipient, handledBy, notes, items:[{item,quantity,unit}], verified, verifiedAt, timestamp }
+  function openReceipt(data) {
+    var when = data.timestamp || nowStr();
+    document.getElementById('rc_no').innerHTML = 'No. ' + esc(receiptNo()) + '<br>' + esc(when);
+    var meta = '<div><span class="k">Recipient:</span> <b>' + esc(data.recipient || '—') + '</b></div>' +
+               '<div><span class="k">Date:</span> <b>' + esc(when) + '</b></div>';
+    if (data.handledBy) meta += '<div><span class="k">Handled by:</span> <b>' + esc(data.handledBy) + '</b></div>';
+    document.getElementById('rc_meta').innerHTML = meta;
+    document.getElementById('rc_items').innerHTML = (data.items || []).map(function (it) {
+      return '<tr><td>' + esc(it.item) + '</td><td class="rc-c">' + it.quantity + '</td><td>' + esc(plural(it.unit, it.quantity)) + '</td></tr>';
+    }).join('') || '<tr><td colspan="3">—</td></tr>';
+    document.getElementById('rc_notes').innerHTML = data.notes ? ('<b>Notes:</b> ' + esc(data.notes)) : '';
+    document.getElementById('rc_recipient_name').textContent = data.recipient || '';
+    var box = document.getElementById('rc_bishop_box'), name = document.getElementById('rc_bishop_name');
+    if (data.verified) {
+      box.innerHTML = '<div class="rc-sig-script">Eljon Serrano</div>';
+      name.textContent = 'Bishop Eljon Serrano' + (data.verifiedAt ? ' · ' + data.verifiedAt : '');
+    } else {
+      box.innerHTML = '<div class="rc-sig-pending">Pending Bishop verification</div>';
+      name.textContent = '';
+    }
+    document.body.classList.add('rc-open');
+    document.getElementById('receiptModal').classList.add('show');
+    setTimeout(initSigPad, 30);
+  }
+  function rcClose() { document.getElementById('receiptModal').classList.remove('show'); document.body.classList.remove('rc-open'); }
+  function rcPrint() { window.print(); }
+  function initSigPad() {
+    var canvas = document.getElementById('rc_canvas');
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round((rect.height || 78) * dpr));
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#0d1b2a';
+    var drawing = false, last = null;
+    function pos(e) { var r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+    canvas.onpointerdown = function (e) { drawing = true; last = pos(e); try { canvas.setPointerCapture(e.pointerId); } catch (_) {} e.preventDefault(); };
+    canvas.onpointermove = function (e) { if (!drawing) return; var p = pos(e); ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p; e.preventDefault(); };
+    canvas.onpointerup = function () { drawing = false; };
+    canvas.onpointerleave = function () { drawing = false; };
+    rcSig = { canvas: canvas, ctx: ctx };
+  }
+  function rcClearSig() { initSigPad(); }
+  // Build a receipt from a History transaction (groups a multi-item distribution).
+  function openReceiptForTx(row) {
+    var t = HISTORY.filter(function (x) { return x.row === row; })[0];
+    if (!t) return;
+    var group = HISTORY.filter(function (x) { return x.type === 'OUT' && x.party === t.party && x.timestamp === t.timestamp; });
+    if (!group.length) group = [t];
+    openReceipt({
+      recipient: t.party, handledBy: t.handledBy, notes: t.notes,
+      items: group.map(function (g) { return { item: g.item, quantity: g.quantity, unit: g.unit }; }),
+      verified: t.verified, verifiedAt: t.verifiedAt, timestamp: t.timestamp
+    });
   }
 
   /* ---------- utils ---------- */
