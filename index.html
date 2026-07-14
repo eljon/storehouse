@@ -405,7 +405,11 @@
             </div>
             <div class="row">
               <div class="field"><label>Category</label>
-                <input id="i_cat" list="catList" placeholder="Category"><datalist id="catList"></datalist></div>
+                <select id="i_cat_sel" onchange="onCatSelChange()">
+                  <option value="">— Choose category —</option>
+                  <option value="__newcat__">➕ New category…</option>
+                </select>
+                <input id="i_cat_new" style="display:none; margin-top:8px" placeholder="New category name"></div>
               <div class="field"><label>Target / par level</label>
                 <input id="i_target" type="number" min="0" inputmode="numeric" placeholder="0"></div>
             </div>
@@ -536,7 +540,7 @@
       .then(function (d) { HISTORY = d.transactions || []; renderHistory(); if (t) toast('History refreshed.', false, true); })
       .catch(function () {});
   }
-  function onData(d) { DATA = d; renderStats(); fillCategoryFilter(); fillCatList(); renderInventory(); }
+  function onData(d) { DATA = d; renderStats(); fillCategoryFilter(); fillCatSelect(); renderInventory(); }
   function onErr(e) {
     toast((e && e.message) || 'Something went wrong.', true);
     document.getElementById('invList').innerHTML =
@@ -615,9 +619,25 @@
     DATA.categories.forEach(function (c) { var o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
     sel.value = cur;
   }
-  function fillCatList() {
-    var dl = document.getElementById('catList'); dl.innerHTML = '';
-    DATA.categories.forEach(function (c) { var o = document.createElement('option'); o.value = c; dl.appendChild(o); });
+  // Populate the new-item category dropdown with existing categories + "add new".
+  function fillCatSelect() {
+    var sel = document.getElementById('i_cat_sel'); if (!sel) return;
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">— Choose category —</option>';
+    DATA.categories.forEach(function (c) { var o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+    var nc = document.createElement('option'); nc.value = '__newcat__'; nc.textContent = '➕ New category…'; sel.appendChild(nc);
+    if (cur === '__newcat__' || DATA.categories.indexOf(cur) > -1) sel.value = cur;
+  }
+  function onCatSelChange() {
+    var isNew = document.getElementById('i_cat_sel').value === '__newcat__';
+    var inp = document.getElementById('i_cat_new');
+    inp.style.display = isNew ? 'block' : 'none';
+    if (isNew) inp.focus();
+  }
+  function newItemCategory() {
+    var sel = document.getElementById('i_cat_sel').value;
+    if (sel === '__newcat__') return val('i_cat_new') || 'Uncategorized';
+    return sel || 'Uncategorized';
   }
   // Pluralize a unit for a given quantity: 1 can, 2 cans, 3 pcs, 2 boxes.
   function plural(unit, n) {
@@ -735,23 +755,27 @@
     var input = wrap.querySelector('.combo-input'), pop = wrap.querySelector('.combo-pop'), clear = wrap.querySelector('.combo-clear');
     var current = [], activeIdx = -1;
     wrap.dataset.value = '';
-    function setValue(id, label) {
+    function setValue(id, label, extra) {
       wrap.dataset.value = (id == null ? '' : String(id));
       wrap.classList.toggle('has-value', id != null);
       if (label != null) input.value = label;
-      if (opts.onChange) opts.onChange(wrap.dataset.value, wrap);
+      if (opts.onChange) opts.onChange(wrap.dataset.value, wrap, extra);
     }
     function open() { render(input.value); pop.classList.add('open'); }
     function close() { pop.classList.remove('open'); activeIdx = -1; }
-    function render(query) {
-      query = (query || '').toLowerCase().trim();
+    function render(rawQuery) {
+      var typed = (rawQuery || '').trim();
+      var query = typed.toLowerCase();
       current = comboSource(opts.includeNew).filter(function (o) {
         if (o.isNew) return true;
         return o.name.toLowerCase().indexOf(query) > -1 || String(o.sub || '').toLowerCase().indexOf(query) > -1;
       });
       if (!current.length) { pop.innerHTML = '<div class="combo-empty">No items found</div>'; return; }
       pop.innerHTML = current.map(function (o, i) {
-        if (o.isNew) return '<div class="combo-row new" data-i="' + i + '">' + esc(o.name) + '</div>';
+        if (o.isNew) {
+          var lbl = typed ? ('＋  Add "' + typed + '" as a new item') : '＋  Add a new item…';
+          return '<div class="combo-row new" data-i="' + i + '">' + esc(lbl) + '</div>';
+        }
         return '<div class="combo-row" data-i="' + i + '"><div style="flex:1;min-width:0">' +
           '<div class="cr-name">' + esc(o.name) + '</div>' + (o.sub ? '<div class="cr-sub">' + esc(o.sub) + '</div>' : '') + '</div>' +
           '<div class="cr-qty' + (o.qty <= 0 ? ' zero' : '') + '">' + o.qty + ' ' + esc(plural(o.unit, o.qty)) + '</div></div>';
@@ -762,7 +786,7 @@
     }
     function pick(i) {
       var o = current[i]; if (!o) return;
-      if (o.isNew) { setValue('__new__', ''); input.value = ''; input.placeholder = 'Adding a new item…'; }
+      if (o.isNew) { var typed = (input.value || '').trim(); setValue('__new__', '', typed); input.value = ''; input.placeholder = 'Adding a new item…'; }
       else setValue(o.id, o.name);
       close();
     }
@@ -852,12 +876,18 @@
   }
 
   /* ---------- input ---------- */
-  function onInputComboChange(value) {
+  function onInputComboChange(value, wrap, typed) {
     var isNew = (value === '__new__');
     document.getElementById('newItemFields').style.display = isNew ? 'block' : 'none';
     var ex = document.getElementById('i_expiry');
-    if (isNew) { ex.value = ''; }
-    else if (value) { var it = DATA.items.filter(function (i) { return String(i.id) === String(value); })[0]; ex.value = (it && it.expiry) || ''; }
+    if (isNew) {
+      ex.value = '';
+      // carry the text typed in the search box into the new-item name
+      if (typed && !val('i_name')) document.getElementById('i_name').value = typed;
+    } else if (value) {
+      var it = DATA.items.filter(function (i) { return String(i.id) === String(value); })[0];
+      ex.value = (it && it.expiry) || '';
+    }
   }
   function submitInput() {
     if (busy) return;
@@ -870,7 +900,7 @@
       var name = val('i_name');
       if (!name) return toast('Enter the new item name.', true);
       payload.id = null; payload.item = name;
-      payload.category = val('i_cat') || 'Uncategorized';
+      payload.category = newItemCategory();
       payload.unit = val('i_unit') || 'pc';
       payload.itemNotes = val('i_itemnotes');
       payload.target = Number(val('i_target')) || 0;
@@ -882,9 +912,11 @@
       .catch(function (e) { afterErr('i_submit', 'Record Input', e); });
   }
   function resetInput() {
-    ['i_qty', 'i_source', 'i_notes', 'i_name', 'i_unit', 'i_cat', 'i_target', 'i_itemnotes', 'i_expiry'].forEach(function (id) {
+    ['i_qty', 'i_source', 'i_notes', 'i_name', 'i_unit', 'i_cat_new', 'i_target', 'i_itemnotes', 'i_expiry'].forEach(function (id) {
       document.getElementById(id).value = '';
     });
+    document.getElementById('i_cat_sel').value = '';
+    onCatSelChange();
     if (inputCombo && inputCombo.reset) inputCombo.reset();
     onInputComboChange('');
     verifyReset('i');
