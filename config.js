@@ -8,4 +8,4 @@
 // Leave it as "" to instead type the URL inside the app once per device
 // (it is remembered in that browser).
 // ---------------------------------------------------------------------------
-window.STOREHOUSE_API_URL = "";
+window.STOREHOUSE_API_URL = "https://script.google.com/macros/s/AKfycbybIi109pY40TJRgPD17t2kQPkrJmzwKyBwqFXafdJlhkb7aGai5lesXxtMgnrAHS29/exec";
