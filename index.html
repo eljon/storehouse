@@ -36,7 +36,7 @@
 
     nav { display:flex; background: var(--card); position: sticky; top: 0; z-index: 15;
       border-bottom: 1px solid var(--line); box-shadow: var(--shadow); }
-    nav button { flex:1; border:0; background:none; padding: 13px 6px 11px; font-size: 13px; font-weight:600;
+    nav button { flex:1; border:0; background:none; padding: 12px 4px 10px; font-size: 12px; font-weight:600;
       color: var(--muted); cursor:pointer; border-bottom: 3px solid transparent; }
     nav button.active { color: var(--green); border-bottom-color: var(--accent); }
 
@@ -87,10 +87,37 @@
       color: var(--green); margin: 14px 2px 8px; display:flex; align-items:center; gap:8px; }
     .cat-head::after { content:""; flex:1; height:1px; background: var(--line); }
 
-    .lineitem { display:flex; gap:8px; align-items:flex-end; margin-bottom:8px; }
+    /* line item (output) */
+    .lineitem { display:flex; gap:8px; align-items:flex-start; margin-bottom:8px; }
     .lineitem .sel { flex: 2.4; }
     .lineitem .num { flex: 1; }
-    .lineitem .rm { flex:none; }
+    .lineitem .rm { flex:none; padding-top:4px; }
+
+    /* searchable combobox */
+    .combo { position: relative; }
+    .combo-input { width:100%; padding-right: 30px; }
+    .combo-clear { position:absolute; right:10px; top:12px; color:var(--muted); cursor:pointer; font-size:13px; display:none; line-height:1; }
+    .combo.has-value .combo-clear { display:block; }
+    .combo-pop { position:absolute; z-index:40; left:0; right:0; top:calc(100% + 4px); background:#fff;
+      border:1px solid var(--line); border-radius:12px; box-shadow:0 12px 34px rgba(0,0,0,.16);
+      max-height:270px; overflow-y:auto; display:none; }
+    .combo-pop.open { display:block; }
+    .combo-row { padding:10px 12px; display:flex; gap:10px; align-items:center; cursor:pointer; border-bottom:1px solid var(--line); }
+    .combo-row:last-child { border-bottom:0; }
+    .combo-row.active, .combo-row:hover { background:#f1efe8; }
+    .combo-row .cr-name { font-weight:600; font-size:14px; }
+    .combo-row .cr-sub { font-size:11.5px; color:var(--muted); }
+    .combo-row .cr-qty { font-size:12px; color:var(--green); font-weight:700; white-space:nowrap; }
+    .combo-row .cr-qty.zero { color:var(--danger); }
+    .combo-row.new { color:var(--green-2); font-weight:700; justify-content:flex-start; }
+    .combo-empty { padding:14px; color:var(--muted); font-size:13px; text-align:center; }
+
+    /* filter chips (history) */
+    .chips { display:flex; gap:8px; margin-bottom: 12px; }
+    .chip { flex:1; text-align:center; padding:9px 6px; border-radius:10px; border:1px solid var(--line);
+      background:#fff; font-weight:600; font-size:12.5px; color:var(--muted); cursor:pointer; }
+    .chip.active { background:var(--green); color:#fff; border-color:var(--green); }
+    .chip b { font-weight:800; }
 
     .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%) translateY(120px);
       background: var(--green); color:#fff; padding: 12px 18px; border-radius: 12px;
@@ -105,6 +132,8 @@
     @keyframes spin { to { transform: rotate(360deg);} }
     .loading { text-align:center; padding: 40px; color: var(--muted); }
 
+    .hist-date { font-size:11.5px; font-weight:800; text-transform:uppercase; letter-spacing:.5px;
+      color: var(--green); margin: 16px 2px 6px; }
     .tx { font-size: 13px; padding: 9px 2px; border-bottom:1px solid var(--line); display:flex; gap:10px; }
     .tx .badge { font-size:10px; font-weight:800; padding:3px 7px; border-radius:6px; height:fit-content; }
     .tx .badge.IN { background:#e0efe6; color: var(--ok); }
@@ -115,7 +144,7 @@
     .hint { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
     hr.soft { border:0; border-top:1px solid var(--line); margin: 12px 0; }
 
-    /* Connect / settings overlay */
+    /* connect / settings overlay */
     .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 200; display:none;
       align-items: flex-start; justify-content: center; overflow-y:auto; padding: 24px 16px; }
     .overlay.show { display:flex; }
@@ -172,6 +201,7 @@
       <button data-tab="check" class="active" onclick="switchTab('check')">📦 Inventory</button>
       <button data-tab="out" onclick="switchTab('out')">📤 Output</button>
       <button data-tab="in" onclick="switchTab('in')">📥 Input</button>
+      <button data-tab="history" onclick="switchTab('history')">🕘 History</button>
     </nav>
 
     <main>
@@ -193,7 +223,7 @@
           <div class="field"><label>Handled by</label>
             <input id="o_handled" placeholder="Your name (storehouse worker)"></div>
           <hr class="soft">
-          <label>Items taken *</label>
+          <label>Items taken * — type to search</label>
           <div id="outLines"></div>
           <button class="ghost" type="button" onclick="addOutLine()">+ Add item</button>
           <hr class="soft">
@@ -207,11 +237,8 @@
       <section id="tab-in" class="tab">
         <div class="card">
           <h2>Record Input — items received</h2>
-          <div class="field"><label>Item *</label>
-            <select id="i_item" onchange="onInputItemChange()">
-              <option value="">— Choose existing item —</option>
-              <option value="__new__">➕ Add a NEW item…</option>
-            </select></div>
+          <div class="field"><label>Item * — type to search, or add new</label>
+            <div id="i_item_combo"></div></div>
           <div id="newItemFields" style="display:none;">
             <div class="row">
               <div class="field"><label>New item name *</label><input id="i_name" placeholder="Item name"></div>
@@ -234,10 +261,20 @@
           <div class="field"><label>Notes (optional)</label><textarea id="i_notes" placeholder="Remarks"></textarea></div>
           <button class="primary" id="i_submit" onclick="submitInput()">Record Input</button>
         </div>
-        <div class="card">
-          <h2>Recent activity</h2>
-          <div id="txList"><div class="empty">No transactions yet.</div></div>
+      </section>
+
+      <!-- HISTORY -->
+      <section id="tab-history" class="tab">
+        <div class="chips">
+          <div class="chip active" data-f="ALL" onclick="setHistoryFilter('ALL')">All <b id="c_all">0</b></div>
+          <div class="chip" data-f="OUT" onclick="setHistoryFilter('OUT')">📤 Output <b id="c_out">0</b></div>
+          <div class="chip" data-f="IN" onclick="setHistoryFilter('IN')">📥 Input <b id="c_in">0</b></div>
         </div>
+        <div class="search">
+          <input id="histQ" type="search" placeholder="Search item, recipient, source, worker…" oninput="renderHistory()">
+          <button class="ghost" type="button" onclick="loadHistory(true)" style="flex:none">↻</button>
+        </div>
+        <div id="histList"><div class="loading"><span class="spinner" style="border-color:#ccc;border-top-color:#1a4731"></span> Loading…</div></div>
       </section>
     </main>
   </div>
@@ -247,6 +284,9 @@
   <script src="config.js"></script>
   <script>
   var DATA = { items: [], categories: [], stats: {} };
+  var HISTORY = [];
+  var historyFilter = 'ALL';
+  var inputCombo = null;
   var busy = false;
   var LS_KEY = 'storehouse_api_url';
 
@@ -266,8 +306,6 @@
       var q = new URLSearchParams(params).toString();
       res = await fetch(url + (url.indexOf('?') === -1 ? '?' : '&') + q, { method: 'GET', redirect: 'follow' });
     } else {
-      // text/plain keeps this a "simple" CORS request (no preflight) so it
-      // works against an Apps Script web app from a static site.
       res = await fetch(url, {
         method: 'POST', redirect: 'follow',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -287,38 +325,30 @@
     if (!getApiUrl()) { showOverlay(false); return; }
     startApp();
   }
-
   function startApp() {
     document.getElementById('overlay').classList.remove('show');
     document.getElementById('app').style.display = 'block';
+    if (!inputCombo) {
+      inputCombo = makeCombo({ includeNew: true, placeholder: 'Search item, or add new…', onChange: onInputComboChange });
+      document.getElementById('i_item_combo').appendChild(inputCombo);
+    }
+    ensureOutLine();
     loadDashboard();
-    loadTransactions();
+    loadHistory();
   }
 
   function loadDashboard() {
-    api('dashboard', 'GET')
-      .then(function (d) { onData(d.dashboard); })
-      .catch(function (e) { onErr(e); });
+    api('dashboard', 'GET').then(function (d) { onData(d.dashboard); }).catch(onErr);
   }
-  function loadTransactions() {
-    api('transactions', 'GET', { limit: 20 })
-      .then(function (d) { renderTx(d.transactions); })
+  function loadHistory(toast_) {
+    api('transactions', 'GET', { limit: 500 })
+      .then(function (d) { HISTORY = d.transactions || []; renderHistory(); if (toast_) toast('History refreshed.'); })
       .catch(function () {});
   }
 
   function onData(d) {
     DATA = d;
-    renderStats(); fillCategoryFilter(); fillItemSelectors(); renderInventory(); syncOutLines();
-  }
-  // Keep the Output tab's item dropdowns in step with current inventory,
-  // and make sure there is always at least one line to fill in.
-  function syncOutLines() {
-    var rows = document.querySelectorAll('#outLines .lineitem');
-    if (rows.length === 0) { addOutLine(); return; }
-    rows.forEach(function (row) {
-      var sel = row.querySelector('.ol-item');
-      sel.innerHTML = itemOptions(sel.value);
-    });
+    renderStats(); fillCategoryFilter(); fillCatList(); renderInventory();
   }
   function onErr(e) {
     toast((e && e.message) || 'Something went wrong.', true);
@@ -342,10 +372,9 @@
   }
   function openSettings() { showOverlay(true); }
   function closeOverlay() {
-    if (!getApiUrl()) return; // must stay until connected
+    if (!getApiUrl()) return;
     document.getElementById('overlay').classList.remove('show');
   }
-
   function connectUrl() {
     var url = (document.getElementById('ov_url').value || '').trim();
     var status = document.getElementById('ov_status');
@@ -394,6 +423,10 @@
     DATA.categories.forEach(function (c) { var o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
     sel.value = cur;
   }
+  function fillCatList() {
+    var dl = document.getElementById('catList'); dl.innerHTML = '';
+    DATA.categories.forEach(function (c) { var o = document.createElement('option'); o.value = c; dl.appendChild(o); });
+  }
   function statusPill(it) {
     if (it.quantity <= 0) return '<span class="pill out">OUT OF STOCK</span>';
     if (it.target > 0 && it.quantity < it.target) return '<span class="pill low">LOW</span>';
@@ -421,22 +454,106 @@
     box.innerHTML = html;
   }
 
-  /* ---------- output ---------- */
-  function itemOptions(selectedId) {
-    var html = '<option value="">— Choose item —</option>';
-    DATA.items.forEach(function (it) {
-      var label = it.item + ' (' + it.quantity + ' ' + it.unit + ')';
-      html += '<option value="' + it.id + '"' + (String(it.id) === String(selectedId) ? ' selected' : '') + '>' + esc(label) + '</option>';
+  /* ---------- searchable combobox ---------- */
+  function comboSource(includeNew) {
+    var list = DATA.items.map(function (it) {
+      return { id: it.id, name: it.item, sub: it.notes || it.category || '', qty: it.quantity, unit: it.unit };
     });
-    return html;
+    if (includeNew) list.unshift({ id: '__new__', name: '➕ Add a NEW item…', isNew: true });
+    return list;
   }
-  function addOutLine(selectedId) {
+  // Creates a self-contained searchable picker. Selected id is kept in
+  // wrapper.dataset.value ('' when nothing chosen, '__new__' for new item).
+  function makeCombo(opts) {
+    opts = opts || {};
+    var wrap = document.createElement('div');
+    wrap.className = 'combo';
+    wrap.innerHTML =
+      '<input type="text" class="combo-input" autocomplete="off" spellcheck="false" placeholder="' + (opts.placeholder || 'Search item…') + '">' +
+      '<span class="combo-clear" title="Clear">&#10005;</span>' +
+      '<div class="combo-pop"></div>';
+    var input = wrap.querySelector('.combo-input');
+    var pop = wrap.querySelector('.combo-pop');
+    var clear = wrap.querySelector('.combo-clear');
+    var current = [], activeIdx = -1;
+    wrap.dataset.value = '';
+
+    function setValue(id, label) {
+      wrap.dataset.value = (id == null ? '' : String(id));
+      wrap.classList.toggle('has-value', id != null);
+      if (label != null) input.value = label;
+      if (opts.onChange) opts.onChange(wrap.dataset.value, wrap);
+    }
+    function open() { render(input.value); pop.classList.add('open'); }
+    function close() { pop.classList.remove('open'); activeIdx = -1; }
+    function render(q) {
+      q = (q || '').toLowerCase().trim();
+      current = comboSource(opts.includeNew).filter(function (o) {
+        if (o.isNew) return true;
+        return o.name.toLowerCase().indexOf(q) > -1 || String(o.sub || '').toLowerCase().indexOf(q) > -1;
+      });
+      if (!current.length) { pop.innerHTML = '<div class="combo-empty">No items found</div>'; return; }
+      pop.innerHTML = current.map(function (o, i) {
+        if (o.isNew) return '<div class="combo-row new" data-i="' + i + '">' + esc(o.name) + '</div>';
+        return '<div class="combo-row" data-i="' + i + '">' +
+          '<div style="flex:1;min-width:0"><div class="cr-name">' + esc(o.name) + '</div>' +
+          (o.sub ? '<div class="cr-sub">' + esc(o.sub) + '</div>' : '') + '</div>' +
+          '<div class="cr-qty' + (o.qty <= 0 ? ' zero' : '') + '">' + o.qty + ' ' + esc(o.unit || '') + '</div></div>';
+      }).join('');
+      Array.prototype.forEach.call(pop.querySelectorAll('.combo-row'), function (row) {
+        row.addEventListener('mousedown', function (e) { e.preventDefault(); pick(Number(row.dataset.i)); });
+      });
+    }
+    function pick(i) {
+      var o = current[i]; if (!o) return;
+      if (o.isNew) { setValue('__new__', ''); input.value = ''; input.placeholder = 'Adding a new item…'; }
+      else setValue(o.id, o.name);
+      close();
+    }
+    function hl() {
+      var rows = pop.querySelectorAll('.combo-row');
+      Array.prototype.forEach.call(rows, function (r, i) {
+        r.classList.toggle('active', i === activeIdx);
+        if (i === activeIdx) r.scrollIntoView({ block: 'nearest' });
+      });
+    }
+    input.addEventListener('focus', open);
+    input.addEventListener('input', function () {
+      wrap.dataset.value = ''; wrap.classList.remove('has-value');
+      if (opts.onChange) opts.onChange('', wrap);
+      activeIdx = -1; open();
+    });
+    input.addEventListener('keydown', function (e) {
+      if (!pop.classList.contains('open')) { if (e.key === 'ArrowDown') open(); return; }
+      var rows = pop.querySelectorAll('.combo-row');
+      if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, rows.length - 1); hl(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); hl(); }
+      else if (e.key === 'Enter') { if (activeIdx >= 0) { e.preventDefault(); pick(Number(rows[activeIdx].dataset.i)); } }
+      else if (e.key === 'Escape') { close(); }
+    });
+    input.addEventListener('blur', function () { setTimeout(close, 150); });
+    clear.addEventListener('mousedown', function (e) {
+      e.preventDefault(); setValue(null, ''); input.value = ''; input.placeholder = opts.placeholder || 'Search item…'; input.focus(); open();
+    });
+    wrap.reset = function () { setValue(null, ''); input.value = ''; input.placeholder = opts.placeholder || 'Search item…'; };
+    return wrap;
+  }
+
+  /* ---------- output ---------- */
+  function ensureOutLine() {
+    if (document.querySelectorAll('#outLines .lineitem').length === 0) addOutLine();
+  }
+  function addOutLine() {
     var div = document.createElement('div');
     div.className = 'lineitem';
-    div.innerHTML =
-      '<div class="sel"><select class="ol-item">' + itemOptions(selectedId) + '</select></div>' +
-      '<div class="num"><input class="ol-qty" type="number" min="1" inputmode="numeric" placeholder="Qty"></div>' +
-      '<div class="rm"><button class="link" type="button" onclick="this.closest(\'.lineitem\').remove()">✕</button></div>';
+    var sel = document.createElement('div'); sel.className = 'sel';
+    sel.appendChild(makeCombo({ includeNew: false, placeholder: 'Search item…' }));
+    var num = document.createElement('div'); num.className = 'num';
+    num.innerHTML = '<input class="ol-qty" type="number" min="1" inputmode="numeric" placeholder="Qty">';
+    var rm = document.createElement('div'); rm.className = 'rm';
+    rm.innerHTML = '<button class="link" type="button">&#10005;</button>';
+    rm.querySelector('button').addEventListener('click', function () { div.remove(); });
+    div.appendChild(sel); div.appendChild(num); div.appendChild(rm);
     document.getElementById('outLines').appendChild(div);
   }
   function submitOutput() {
@@ -445,7 +562,7 @@
     if (!recipient) return toast('Enter the recipient name.', true);
     var lines = [], ok = true;
     document.querySelectorAll('#outLines .lineitem').forEach(function (row) {
-      var id = row.querySelector('.ol-item').value;
+      var id = row.querySelector('.combo').dataset.value;
       var qty = Number(row.querySelector('.ol-qty').value);
       if (!id && !qty) return;
       if (!id || !(qty > 0)) { ok = false; return; }
@@ -465,24 +582,12 @@
   }
 
   /* ---------- input ---------- */
-  function fillItemSelectors() {
-    var sel = document.getElementById('i_item'); var cur = sel.value;
-    sel.innerHTML = '<option value="">— Choose existing item —</option><option value="__new__">➕ Add a NEW item…</option>';
-    DATA.items.forEach(function (it) {
-      var o = document.createElement('option'); o.value = it.id;
-      o.textContent = it.item + ' (' + it.quantity + ' ' + it.unit + ')'; sel.appendChild(o);
-    });
-    sel.value = cur;
-    var dl = document.getElementById('catList'); dl.innerHTML = '';
-    DATA.categories.forEach(function (c) { var o = document.createElement('option'); o.value = c; dl.appendChild(o); });
-  }
-  function onInputItemChange() {
-    var isNew = document.getElementById('i_item').value === '__new__';
-    document.getElementById('newItemFields').style.display = isNew ? 'block' : 'none';
+  function onInputComboChange(value) {
+    document.getElementById('newItemFields').style.display = (value === '__new__') ? 'block' : 'none';
   }
   function submitInput() {
     if (busy) return;
-    var sel = document.getElementById('i_item').value;
+    var sel = inputCombo.dataset.value;
     var qty = Number(val('i_qty'));
     if (!sel) return toast('Choose an item (or add a new one).', true);
     if (!(qty > 0)) return toast('Enter a quantity greater than zero.', true);
@@ -507,7 +612,8 @@
     ['i_qty', 'i_source', 'i_notes', 'i_name', 'i_unit', 'i_cat', 'i_target', 'i_itemnotes'].forEach(function (id) {
       document.getElementById(id).value = '';
     });
-    document.getElementById('i_item').value = ''; onInputItemChange();
+    if (inputCombo && inputCombo.reset) inputCombo.reset();
+    onInputComboChange('');
   }
 
   /* ---------- shared write handling ---------- */
@@ -516,22 +622,54 @@
     if (res && res.dashboard) onData(res.dashboard);
     resetFn();
     toast((res && res.message) || 'Saved.');
-    loadTransactions();
+    loadHistory();
   }
   function afterErr(btnId, label, e) {
     setBusy(btnId, false, label);
     toast((e && e.message) || 'Could not save.', true);
   }
 
-  function renderTx(list) {
-    var box = document.getElementById('txList');
-    if (!list || !list.length) { box.innerHTML = '<div class="empty">No transactions yet.</div>'; return; }
-    box.innerHTML = list.map(function (t) {
-      var party = t.party ? (t.type === 'OUT' ? 'to ' + t.party : 'from ' + t.party) : '';
-      return '<div class="tx"><span class="badge ' + t.type + '">' + t.type + '</span>' +
-        '<div class="d"><div class="t">' + t.quantity + ' ' + esc(t.unit || '') + ' — ' + esc(t.item) + '</div>' +
-        '<div class="s">' + esc(party) + (t.handledBy ? (' &middot; by ' + esc(t.handledBy)) : '') + '<br>' + esc(t.timestamp) + '</div></div></div>';
-    }).join('');
+  /* ---------- history ---------- */
+  function setHistoryFilter(f) {
+    historyFilter = f;
+    document.querySelectorAll('.chip').forEach(function (c) { c.classList.toggle('active', c.dataset.f === f); });
+    renderHistory();
+  }
+  function dateOf(ts) { var m = String(ts || '').match(/^(.*\d{4})/); return m ? m[1] : (ts || 'Earlier'); }
+  function timeOf(ts) { var t = String(ts || '').replace(/^.*\d{4}\s*/, ''); return t || ts || ''; }
+  function txRow(t) {
+    var party = t.party ? (t.type === 'OUT' ? 'to ' + t.party : 'from ' + t.party) : '';
+    var bal = (t.balanceAfter !== '' && t.balanceAfter != null) ? (' &middot; bal ' + t.balanceAfter) : '';
+    return '<div class="tx"><span class="badge ' + t.type + '">' + t.type + '</span>' +
+      '<div class="d"><div class="t">' + t.quantity + ' ' + esc(t.unit || '') + ' — ' + esc(t.item) + '</div>' +
+      '<div class="s">' + esc(party) + (t.handledBy ? (' &middot; by ' + esc(t.handledBy)) : '') + bal +
+      ' &middot; ' + esc(timeOf(t.timestamp)) + '</div></div></div>';
+  }
+  function renderHistory() {
+    var nAll = HISTORY.length, nOut = 0, nIn = 0;
+    HISTORY.forEach(function (t) { if (t.type === 'OUT') nOut++; else if (t.type === 'IN') nIn++; });
+    document.getElementById('c_all').textContent = nAll;
+    document.getElementById('c_out').textContent = nOut;
+    document.getElementById('c_in').textContent = nIn;
+
+    var q = (document.getElementById('histQ').value || '').toLowerCase().trim();
+    var list = HISTORY.filter(function (t) {
+      if (historyFilter !== 'ALL' && t.type !== historyFilter) return false;
+      if (q) {
+        var hay = (String(t.item) + ' ' + t.party + ' ' + t.handledBy + ' ' + t.notes + ' ' + t.category).toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+    var box = document.getElementById('histList');
+    if (!list.length) { box.innerHTML = '<div class="empty">No matching history yet.</div>'; return; }
+    var html = '', lastDate = null;
+    list.forEach(function (t) {
+      var d = dateOf(t.timestamp);
+      if (d !== lastDate) { html += '<div class="hist-date">' + esc(d) + '</div>'; lastDate = d; }
+      html += txRow(t);
+    });
+    box.innerHTML = html;
   }
 
   /* ---------- utils ---------- */

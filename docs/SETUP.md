@@ -89,11 +89,13 @@ That's it — bookmark the Pages URL / add it to your home screen.
 
 - **📦 Inventory** — search or filter by category. Items below their target show
   a **LOW** badge; empty ones show **OUT**.
-- **📤 Output** — enter the recipient, **+ Add item** for each item taken (chosen
-  from current stock) with a quantity → **Record Output**. You can't issue more
-  than is in stock.
-- **📥 Input** — choose an existing item (or **➕ Add a NEW item**), enter the
-  quantity received and the source → **Record Input**.
+- **📤 Output** — enter the recipient, then **type to search** for each item
+  taken (the picker shows current stock), add a quantity, **+ Add item** for
+  more → **Record Output**. You can't issue more than is in stock.
+- **📥 Input** — type to search for an item (or pick **➕ Add a NEW item**), enter
+  the quantity received and the source → **Record Input**.
+- **🕘 History** — every movement in one place. Tap **All / Output / Input** to
+  filter, or use the search box (item, recipient, source, worker).
 
 Every input/output is written to the **Transactions** tab with a timestamp, so
 you always have a full paper trail.

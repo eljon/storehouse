@@ -10,8 +10,9 @@ no billing** — anywhere.
 | Function | What it does |
 |----------|--------------|
 | 📦 **Check inventory** | Browse current stock, search, filter by category, and spot **LOW** / **OUT OF STOCK** items at a glance. |
-| 📤 **Record output** | Log items leaving the storehouse — recipient name + one or more items chosen from what's in stock. Stock is validated so you can't over-issue. |
-| 📥 **Record input** | Log items received — add to an existing item's stock, or create a brand-new item on the fly. |
+| 📤 **Record output** | Log items leaving the storehouse — recipient name + one or more items picked with a **type-to-search** selector (shows live stock). Stock is validated so you can't over-issue. |
+| 📥 **Record input** | Log items received — find an item with the **searchable** picker, or add a brand-new item on the fly. |
+| 🕘 **History** | Full log of every movement with **All / Output / Input** filters and a search box (by item, recipient, source, or worker), grouped by date. |
 
 Every input and output is appended to a **Transactions** log (timestamp, type,
 item, quantity, party, handled-by, running balance) for a full audit trail.
