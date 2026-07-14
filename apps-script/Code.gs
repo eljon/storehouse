@@ -78,18 +78,52 @@ const SEED_DATA = [
   ['Disposables', 'Garbage bags', 'roll of 10, large', 'roll', 2]
 ];
 
-/* ============================ Web app entry ============================ */
+/* ============================ Web app API ============================= */
+// Serves JSON so a static front-end (GitHub Pages) can read and write the
+// Sheet. Responses are "simple requests" friendly, so the browser needs no
+// CORS preflight — and no Google Cloud Console project is required.
 
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
-    .setTitle(APP_TITLE)
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-    .setFaviconUrl('https://ssl.gstatic.com/docs/spreadsheets/favicon3.ico');
+function doGet(e) {
+  return handleRequest_(e, false);
 }
 
-/** Small values the client needs to render itself. */
-function getAppInfo() {
-  return { title: APP_TITLE };
+function doPost(e) {
+  return handleRequest_(e, true);
+}
+
+function handleRequest_(e, isPost) {
+  try {
+    var params = (e && e.parameter) ? e.parameter : {};
+    var body = {};
+    if (isPost && e && e.postData && e.postData.contents) {
+      try { body = JSON.parse(e.postData.contents) || {}; } catch (err) { body = {}; }
+    }
+    var action = body.action || params.action || 'dashboard';
+
+    switch (action) {
+      case 'ping':
+        return jsonOut_({ ok: true, title: APP_TITLE });
+      case 'dashboard':
+        return jsonOut_({ ok: true, dashboard: getDashboard() });
+      case 'transactions':
+        return jsonOut_({ ok: true,
+          transactions: getRecentTransactions(Number(params.limit || body.limit) || 20) });
+      case 'output':
+        return jsonOut_(recordOutput(body));
+      case 'input':
+        return jsonOut_(recordInput(body));
+      default:
+        return jsonOut_({ ok: false, error: 'Unknown action: ' + action });
+    }
+  } catch (err) {
+    return jsonOut_({ ok: false, error: (err && err.message) ? err.message : String(err) });
+  }
+}
+
+function jsonOut_(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 /* ============================ Setup / seeding ========================== */

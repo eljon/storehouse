@@ -1,8 +1,9 @@
 # Kalayaan Ward Bishop's Storehouse — Inventory App
 
 A simple inventory-management web app for the Kalayaan Ward Bishop's Storehouse.
-It runs on **Google Sheets + Google Apps Script** — **no Google Cloud Console,
-no API keys, no billing**. Your data lives in one Google Sheet you own.
+The UI is a **static site on GitHub Pages**; the data lives in a **Google Sheet**
+served by a **Google Apps Script** API. **No Google Cloud Console, no API keys,
+no billing** — anywhere.
 
 ## Features
 
@@ -13,11 +14,29 @@ no API keys, no billing**. Your data lives in one Google Sheet you own.
 | 📥 **Record input** | Log items received — add to an existing item's stock, or create a brand-new item on the fly. |
 
 Every input and output is appended to a **Transactions** log (timestamp, type,
-item, quantity, party, handled-by, notes, running balance) for a full audit trail.
+item, quantity, party, handled-by, running balance) for a full audit trail.
+
+## How it fits together
+
+```
+   ┌─────────────────────────┐        fetch (JSON)        ┌──────────────────────────┐
+   │  GitHub Pages (static)  │  ───────────────────────▶  │  Google Apps Script /exec │
+   │  index.html + config.js │  ◀───────────────────────  │  (Web app, "Anyone")      │
+   └─────────────────────────┘                            └────────────┬─────────────┘
+        the app UI, on phones                                          reads / writes
+                                                              ┌────────▼─────────┐
+                                                              │   Google Sheet   │
+                                                              │ Inventory + Log  │
+                                                              └──────────────────┘
+```
+
+The browser calls the Apps Script Web app using CORS-simple requests
+(`GET`, and `POST` with a `text/plain` body), so it works from a static host
+with no server of our own and no Cloud Console.
 
 ## How the data is stored
 
-The Google Sheet has two tabs, created automatically:
+The Google Sheet has two tabs, created automatically by `setup()`:
 
 - **`Inventory`** — `ID · Category · Item · Notes/Size · Unit · Quantity · Target`
 - **`Transactions`** — `Timestamp · Type · Item ID · Item · Category · Quantity · Unit · Party · Handled By · Notes · Balance After`
@@ -29,26 +48,32 @@ using the checklist quantities as both starting stock and reorder targets.
 ## Project structure
 
 ```
+index.html            # The GitHub Pages app (UI). Talks to the Apps Script API.
+config.js             # Put your Apps Script Web app URL here (optional; can also set it in-app).
+.nojekyll             # Tells GitHub Pages to serve files as-is.
 apps-script/
-  Code.gs           # Server-side: setup/seeding, reads, and input/output writes
-  Index.html        # The mobile-friendly web app UI (single file)
-  appsscript.json   # Manifest (Manila time zone, web-app config)
+  Code.gs             # Backend: setup/seeding, JSON API (doGet/doPost), input/output writes.
+  appsscript.json     # Manifest (Manila time zone, web-app config).
 docs/
-  SETUP.md          # Step-by-step: create the Sheet → paste code → deploy
+  SETUP.md            # Full step-by-step: deploy the API, publish Pages, connect them.
 ```
 
 ## Getting started
 
 Follow **[docs/SETUP.md](docs/SETUP.md)**. In short:
 
-1. Create a blank Google Sheet → **Extensions → Apps Script**.
-2. Paste in `apps-script/Code.gs` and add an HTML file `Index` with `apps-script/Index.html`.
-3. Run `setup()` once (authorize when prompted) to build + seed the sheets.
-4. **Deploy → New deployment → Web app**, and open the link on your phone.
+1. **Backend:** create a Google Sheet → **Extensions → Apps Script** → paste
+   `apps-script/Code.gs` → run `setup()` → **Deploy → Web app** (access:
+   *Anyone*) → copy the URL.
+2. **Frontend:** **Settings → Pages** → *Deploy from a branch* → root → open the
+   Pages URL.
+3. **Connect:** paste the Web app URL into the app once (or into `config.js` for
+   everyone).
 
-## Why Apps Script (and not the Cloud Console)?
+## Why this design?
 
-A **container-bound** Apps Script is attached directly to your Sheet. It reads
-and writes that Sheet using your own Google account's permission, and Google
-lets you publish it as a web app without creating a Cloud project or API
-credentials — exactly matching the "no Cloud Console" requirement.
+- **GitHub Pages** is static-only, so the UI lives there and the data layer
+  stays in Apps Script.
+- A **container-bound Apps Script** reads/writes the Sheet with your own Google
+  account and can be published as a web app **without a Cloud Console project or
+  API credentials** — matching the "no Cloud Console" requirement.

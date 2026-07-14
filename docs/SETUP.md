@@ -1,107 +1,116 @@
 # Setup Guide — Kalayaan Ward Bishop's Storehouse App
 
-This app runs entirely on **Google Sheets + Google Apps Script**. There is
-**no Cloud Console, no API key, and no billing** to set up. Everything below
-takes about 10 minutes and only needs to be done once.
+The app has two halves that work together — **no Google Cloud Console, no API
+key, and no billing** anywhere:
+
+1. **Backend (your data)** — a **Google Apps Script** attached to a Google
+   Sheet, deployed as a small JSON **Web app**. This holds and serves the data.
+2. **Frontend (the app UI)** — static files (`index.html`) hosted free on
+   **GitHub Pages**. It talks to the Web app from step 1.
+
+Do **Part A** first (you'll get a URL), then **Part B**, then paste the URL in.
 
 ---
 
-## What you'll end up with
+## Part A — Backend: Google Sheet + Apps Script API
 
-- A **Google Sheet** that stores all your data (two tabs: `Inventory` and `Transactions`).
-- A **mobile-friendly web app** (its own link) with three functions:
-  - 📦 **Inventory** — check stock, search, see low / out-of-stock items
-  - 📤 **Output** — record items taken out (recipient name + items chosen from stock)
-  - 📥 **Input** — record items received (adds to stock, or creates a new item)
-
----
-
-## Step 1 — Create the Google Sheet
-
-1. Go to <https://sheets.google.com> and click **Blank spreadsheet**.
+### A1. Create the Google Sheet
+1. Go to <https://sheets.google.com> → **Blank spreadsheet**.
 2. Rename it (top-left) to **`Kalayaan Storehouse`**.
 
-## Step 2 — Open the script editor
+### A2. Add the script
+1. In the sheet: **Extensions → Apps Script**.
+2. Delete everything in the `Code.gs` file, then paste in the full contents of
+   [`apps-script/Code.gs`](../apps-script/Code.gs) from this repo.
+3. Click **💾 Save**.
 
-1. In the sheet, click **Extensions → Apps Script**.
-2. A new tab opens with a file called `Code.gs` containing an empty
-   `function myFunction() {}`.
+> *(Optional)* To set the Manila time zone, open **Project Settings (⚙️) →
+> "Show appsscript.json manifest file"**, then replace that file's contents
+> with [`apps-script/appsscript.json`](../apps-script/appsscript.json).
 
-## Step 3 — Paste the code
+### A3. Build the sheets & load starting inventory
+1. In the function dropdown at the top, choose **`setup`** → click **▶ Run**.
+2. Authorize when asked:
+   - **Review permissions** → pick your Google account.
+   - If you see *"Google hasn't verified this app"* (normal for your own
+     script): **Advanced → Go to (project) (unsafe) → Allow**.
+3. Back in the Sheet you'll now see an **`Inventory`** tab with the 40
+   emergency-prep items and an empty **`Transactions`** tab.
 
-You need to create **two files** in the Apps Script editor.
-
-**File 1 — `Code.gs`**
-1. Select everything in the existing `Code.gs` and delete it.
-2. Open [`apps-script/Code.gs`](../apps-script/Code.gs) from this repo, copy the whole file, and paste it in.
-
-**File 2 — `Index.html`**
-1. Click the **`+`** next to *Files* → **HTML**.
-2. Name it exactly **`Index`** (Apps Script adds the `.html` itself).
-3. Delete the placeholder content, then copy the whole of
-   [`apps-script/Index.html`](../apps-script/Index.html) and paste it in.
-
-4. Click the **💾 Save** icon.
-
-> *(Optional but recommended)* Set the project time zone to Manila:
-> click **Project Settings (⚙️) → “Show appsscript.json manifest file”**,
-> then open the `appsscript.json` file and replace its contents with
-> [`apps-script/appsscript.json`](../apps-script/appsscript.json).
-
-## Step 4 — Build the sheets & load starting inventory
-
-1. Back on the editor, in the function dropdown at the top select **`setup`**.
-2. Click **▶ Run**.
-3. The first time, Google asks you to **authorize**:
-   - Click **Review permissions** → pick your Google account.
-   - You may see *“Google hasn't verified this app.”* This is normal for your
-     own scripts. Click **Advanced → Go to (project name) (unsafe)** → **Allow**.
-     *(It says “unsafe” only because it's an unpublished personal script — it's your own code.)*
-4. Switch to the Sheet tab. You should now see an **`Inventory`** tab filled
-   with the 40 emergency-prep items and a blank **`Transactions`** tab.
-
-## Step 5 — Deploy the web app
-
-1. In the editor, click **Deploy → New deployment**.
+### A4. Deploy as a Web app (this is your API)
+1. In the editor: **Deploy → New deployment**.
 2. Click the **⚙️ gear → Web app**.
-3. Fill in:
-   - **Description:** `Storehouse app`
+3. Set:
    - **Execute as:** **Me**
-   - **Who has access:** choose one:
-     - **Anyone** — anyone with the link can use it (simplest for shared workers).
-     - **Anyone within [your org]** — if your ward uses a Google Workspace domain.
-4. Click **Deploy**, authorize again if asked, and **copy the Web app URL**.
-5. Open that URL on your phone or computer — that's your storehouse app.
-   Bookmark it / add it to your home screen.
+   - **Who has access:** **Anyone**  ← required so the GitHub Pages site can reach it
+4. **Deploy**, authorize if asked, then **copy the Web app URL**
+   (it looks like `https://script.google.com/macros/s/AKfy…/exec`).
+   **Keep this URL** — you'll paste it into the app in Part B.
+
+---
+
+## Part B — Frontend: publish on GitHub Pages
+
+### B1. Enable GitHub Pages
+1. In this GitHub repository: **Settings → Pages**.
+2. Under **Build and deployment → Source**, choose **Deploy from a branch**.
+3. Pick the branch that has these files and folder **`/ (root)`** → **Save**.
+4. Wait ~1 minute. GitHub shows the live URL, e.g.
+   `https://<your-username>.github.io/storehouse/`. Open it.
+
+### B2. Connect the app to your Sheet
+When the site first opens it asks for the **Apps Script Web app URL**:
+
+- **Option 1 (per device):** paste the URL from step **A4** into the box and
+  click **Connect**. It's remembered in that browser. Repeat once on each
+  phone/computer that uses the app.
+- **Option 2 (everyone at once):** edit [`config.js`](../config.js), put your
+  URL between the quotes:
+  ```js
+  window.STOREHOUSE_API_URL = "https://script.google.com/macros/s/AKfy…/exec";
+  ```
+  commit it, and every visitor is connected automatically — no pasting needed.
+
+That's it — bookmark the Pages URL / add it to your home screen.
 
 ---
 
 ## Everyday use
 
-- **Check inventory:** open the app → **Inventory** tab. Search or filter by
-  category. Items below their target show a **LOW** badge; empty ones show **OUT**.
-- **Record output:** **Output** tab → type the recipient, **+ Add item** for
-  each item taken (chosen from current stock) with a quantity → **Record Output**.
-  Stock is checked so you can't take out more than you have.
-- **Record input:** **Input** tab → choose an existing item (or **➕ Add a NEW
-  item**), enter the quantity received and the source → **Record Input**.
+- **📦 Inventory** — search or filter by category. Items below their target show
+  a **LOW** badge; empty ones show **OUT**.
+- **📤 Output** — enter the recipient, **+ Add item** for each item taken (chosen
+  from current stock) with a quantity → **Record Output**. You can't issue more
+  than is in stock.
+- **📥 Input** — choose an existing item (or **➕ Add a NEW item**), enter the
+  quantity received and the source → **Record Input**.
 
-Every output and input is written to the **Transactions** tab with a
-timestamp, so you always have a full paper trail.
+Every input/output is written to the **Transactions** tab with a timestamp, so
+you always have a full paper trail.
 
 ---
 
 ## Updating the code later
 
-If you change `Code.gs` or `Index.html`, save, then
-**Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy**.
-The web app URL stays the same.
+- **Frontend** (`index.html`): just push to the branch — GitHub Pages redeploys automatically.
+- **Backend** (`Code.gs`): paste the changes into the Apps Script editor, save,
+  then **Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy**.
+  The Web app URL stays the same, so nothing else needs updating.
+
+## Troubleshooting
+
+- **"Could not connect" / "Failed to fetch":** the Web app URL is wrong or the
+  deployment's access isn't **Anyone**. Re-check step A4, then use the app's
+  **⚙️ settings** to re-enter the URL. Make sure it ends in `/exec` (not `/dev`).
+- **Changed the code but nothing changed:** you must create a **New version**
+  under *Manage deployments* (step above) for backend changes to go live.
 
 ## Notes
 
 - **`setup()` is safe to re-run** — it won't wipe an Inventory tab that already
   has data, and never touches your Transactions log.
-- The starting quantities double as **target / par levels** for the low-stock
-  badges. You can edit the `Target` column in the Inventory sheet anytime.
-- To reset to an empty inventory, delete the rows under the header in the
-  `Inventory` tab and run `setup()` again.
+- Starting quantities double as **target / par levels** for the low-stock
+  badges. Edit the `Target` column in the Inventory sheet anytime.
+- **Who can write:** because access is *Anyone with the link*, treat the Pages
+  URL as semi-private (share only with storehouse workers). Ask if you'd like a
+  simple PIN gate added.
