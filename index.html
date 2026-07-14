@@ -345,8 +345,8 @@
       <div class="im-meta" id="im_meta"></div>
 
       <div class="im-tabs">
-        <button data-m="out" class="active" onclick="imSetMode('out')">Stock Out</button>
-        <button data-m="in" onclick="imSetMode('in')">Stock In</button>
+        <button data-m="out" class="active" onclick="imSetMode('out')">Distribute</button>
+        <button data-m="in" onclick="imSetMode('in')">Restock</button>
         <button data-m="del" onclick="imSetMode('del')">Delete</button>
       </div>
 
@@ -365,13 +365,13 @@
         <div class="field"><label>Expiry date (optional)</label><input id="im_i_expiry" type="date"></div>
       </div>
       <div class="im-form" id="im_del" style="display:none">
-        <div class="im-warn">This removes the item from inventory and records a <b>stock out</b> of the remaining quantity. This can't be undone.</div>
+        <div class="im-warn">This removes the item from inventory and records a <b>distribution</b> of the remaining quantity. This can't be undone.</div>
         <div class="field"><label>Reason</label><input id="im_d_reason" placeholder="e.g. Expired / no longer stocked"></div>
       </div>
 
       <div class="field"><label id="im_pw_label">Bishop's password (optional)</label>
         <input id="im_pw" type="password" autocomplete="off" placeholder="Verify this transaction"></div>
-      <button class="primary" id="im_submit" onclick="imSubmit()">Record stock out</button>
+      <button class="primary" id="im_submit" onclick="imSubmit()">Distribute</button>
       <div class="statusline" id="im_msg"></div>
 
       <hr class="soft">
@@ -395,8 +395,8 @@
       </div>
       <nav class="segmented">
         <button data-tab="check" class="active" onclick="switchTab('check')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 8l-8-4-8 4 8 4 8-4z"/><path d="M4 8v8l8 4 8-4V8"/></svg><span>Inventory</span></button>
-        <button data-tab="out" onclick="switchTab('out')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M8 7l4-4 4 4"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg><span>Stock Out</span></button>
-        <button data-tab="in" onclick="switchTab('in')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg><span>Stock In</span></button>
+        <button data-tab="out" onclick="switchTab('out')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M8 7l4-4 4 4"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg><span>Distribute</span></button>
+        <button data-tab="in" onclick="switchTab('in')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg><span>Restock</span></button>
         <button data-tab="history" onclick="switchTab('history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>History</span></button>
       </nav>
     </div>
@@ -417,13 +417,13 @@
       <!-- RECORD OUTPUT -->
       <section id="tab-out" class="tab">
         <div class="card">
-          <h2>Stock Out<span>Items leaving the storehouse</span></h2>
+          <h2>Distribute<span>Items leaving the storehouse</span></h2>
           <div class="field"><label>Recipient name *</label>
             <input id="o_recipient" placeholder="e.g. Sister Reyes / Elders Quorum"></div>
           <div class="field"><label>Handled by</label>
             <input id="o_handled" placeholder="Your name (storehouse worker)"></div>
           <hr class="soft">
-          <label>Items taken * — type to search</label>
+          <label>Items to distribute * — type to search</label>
           <div id="outLines"></div>
           <button class="ghost" type="button" onclick="addOutLine()">+ Add item</button>
           <hr class="soft">
@@ -448,14 +448,14 @@
               <button type="button" class="linkbtn" style="color:var(--muted)" onclick="verifyReset('o')">Undo</button>
             </div>
           </div>
-          <button class="primary" id="o_submit" onclick="submitOutput()">Record stock out</button>
+          <button class="primary" id="o_submit" onclick="submitOutput()">Distribute</button>
         </div>
       </section>
 
       <!-- RECORD INPUT -->
       <section id="tab-in" class="tab">
         <div class="card">
-          <h2>Stock In<span>Items received into the storehouse</span></h2>
+          <h2>Restock<span>Items received into the storehouse</span></h2>
           <div class="field"><label>Item * — type to search, or add new</label>
             <div id="i_item_combo"></div></div>
           <div id="newItemFields" style="display:none;">
@@ -504,7 +504,7 @@
               <button type="button" class="linkbtn" style="color:var(--muted)" onclick="verifyReset('i')">Undo</button>
             </div>
           </div>
-          <button class="primary" id="i_submit" onclick="submitInput()">Record stock in</button>
+          <button class="primary" id="i_submit" onclick="submitInput()">Restock</button>
         </div>
       </section>
 
@@ -512,8 +512,8 @@
       <section id="tab-history" class="tab">
         <div class="chips" id="histTypeChips">
           <div class="chip active" data-f="ALL" onclick="setHistoryFilter('ALL')">All <b id="c_all">0</b></div>
-          <div class="chip" data-f="OUT" onclick="setHistoryFilter('OUT')">Stock Out <b id="c_out">0</b></div>
-          <div class="chip" data-f="IN" onclick="setHistoryFilter('IN')">Stock In <b id="c_in">0</b></div>
+          <div class="chip" data-f="OUT" onclick="setHistoryFilter('OUT')">Distributed <b id="c_out">0</b></div>
+          <div class="chip" data-f="IN" onclick="setHistoryFilter('IN')">Restocked <b id="c_in">0</b></div>
         </div>
         <div class="chips sub" id="histVerifyChips">
           <div class="chip active" data-v="ALL" onclick="setHistoryVerify('ALL')">All</div>
@@ -926,8 +926,8 @@
     if (!lines.length) return toast('Add at least one item.', true);
     setBusy('o_submit', true, 'Recording…');
     api('output', 'POST', { recipient: recipient, handledBy: val('o_handled'), notes: val('o_notes'), lines: lines, verifyPassword: verifyPw.o })
-      .then(function (res) { afterWrite('o_submit', 'Record stock out', res, resetOutput); })
-      .catch(function (e) { afterErr('o_submit', 'Record stock out', e); });
+      .then(function (res) { afterWrite('o_submit', 'Distribute', res, resetOutput); })
+      .catch(function (e) { afterErr('o_submit', 'Distribute', e); });
   }
   function resetOutput() {
     ['o_recipient', 'o_handled', 'o_notes'].forEach(function (id) { document.getElementById(id).value = ''; });
@@ -968,8 +968,8 @@
     payload.verifyPassword = verifyPw.i;
     setBusy('i_submit', true, 'Recording…');
     api('input', 'POST', payload)
-      .then(function (res) { afterWrite('i_submit', 'Record stock in', res, resetInput); })
-      .catch(function (e) { afterErr('i_submit', 'Record stock in', e); });
+      .then(function (res) { afterWrite('i_submit', 'Restock', res, resetInput); })
+      .catch(function (e) { afterErr('i_submit', 'Restock', e); });
   }
   function resetInput() {
     ['i_qty', 'i_source', 'i_notes', 'i_name', 'i_unit', 'i_cat_new', 'i_target', 'i_itemnotes', 'i_expiry'].forEach(function (id) {
@@ -1105,7 +1105,7 @@
     document.getElementById('im_in').style.display = m === 'in' ? 'block' : 'none';
     document.getElementById('im_del').style.display = m === 'del' ? 'block' : 'none';
     var btn = document.getElementById('im_submit');
-    btn.textContent = (m === 'out') ? 'Record stock out' : (m === 'in') ? 'Record stock in' : 'Delete item';
+    btn.textContent = (m === 'out') ? 'Distribute' : (m === 'in') ? 'Restock' : 'Delete item';
     btn.classList.toggle('danger', m === 'del');
     document.getElementById('im_pw_label').textContent = (m === 'del')
       ? "Bishop's password (required)" : "Bishop's password (optional)";
@@ -1132,7 +1132,7 @@
   function imCall(action, payload, closeAfter) {
     var msg = document.getElementById('im_msg'); msg.className = 'statusline'; msg.textContent = 'Saving…';
     setBusy('im_submit', true, 'Saving…');
-    var label = (imMode === 'out') ? 'Record stock out' : (imMode === 'in') ? 'Record stock in' : 'Delete item';
+    var label = (imMode === 'out') ? 'Distribute' : (imMode === 'in') ? 'Restock' : 'Delete item';
     api(action, 'POST', payload).then(function (res) {
       setBusy('im_submit', false, label);
       if (res && res.dashboard) onData(res.dashboard);

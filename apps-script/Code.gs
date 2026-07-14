@@ -460,7 +460,7 @@ function recordOutput(payload) {
 
     return {
       ok: true,
-      message: 'Recorded stock out of ' + lines.length + ' item(s) to ' + recipient + '.' +
+      message: 'Distributed ' + lines.length + ' item(s) to ' + recipient + '.' +
                (verified ? ' Verified by the Bishop.' : ''),
       verified: verified,
       dashboard: getDashboard()
@@ -543,7 +543,7 @@ function recordInput(payload) {
 
     return {
       ok: true,
-      message: 'Recorded stock in of ' + qty + ' ' + unit + ' of "' + itemName + '".' +
+      message: 'Restocked ' + qty + ' ' + unit + ' of "' + itemName + '".' +
                (verified ? ' Verified by the Bishop.' : ''),
       verified: verified,
       dashboard: getDashboard()
@@ -595,7 +595,7 @@ function deleteItem_(payload) {
 
     return {
       ok: true,
-      message: 'Deleted "' + r[2] + '" — recorded as stock out of ' + qty + ' ' + r[4] + '.' +
+      message: 'Deleted "' + r[2] + '" — recorded as a distribution of ' + qty + ' ' + r[4] + '.' +
                (verified ? ' Verified by the Bishop.' : ''),
       verified: verified,
       dashboard: getDashboard()
