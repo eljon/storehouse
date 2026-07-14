@@ -25,8 +25,9 @@ const INV_HEADERS = ['ID', 'Category', 'Item', 'Notes / Size', 'Unit', 'Quantity
 const NEAR_EXPIRY_DAYS = 90;
 const TX_HEADERS  = ['Timestamp', 'Type', 'Item ID', 'Item', 'Category',
                      'Quantity', 'Unit', 'Party', 'Handled By', 'Notes', 'Balance After',
-                     'Verified', 'Verified At', 'Signature'];
+                     'Verified', 'Verified At', 'Signature', 'Signed At'];
 const SIGNATURE_COL = 14;   // 1-based column of the recipient signature
+const SIGNED_AT_COL = 15;   // 1-based column of when the recipient signed
 
 const APP_TITLE = "Kalayaan Ward Bishop's Storehouse";
 
@@ -376,24 +377,33 @@ function saveSignature_(payload) {
     if (!rows.length) throw new Error('No transaction rows to sign.');
     const sheet = mustSheet_(TX_SHEET);
     const last = sheet.getLastRow();
-    var n = 0;
+    var ts = new Date(), n = 0;
     rows.forEach(function (r) {
       r = Number(r);
-      if (r >= 2 && r <= last) { sheet.getRange(r, SIGNATURE_COL).setValue(sig); n++; }
+      if (r >= 2 && r <= last) {
+        sheet.getRange(r, SIGNATURE_COL).setValue(sig);
+        sheet.getRange(r, SIGNED_AT_COL).setValue(ts);
+        n++;
+      }
     });
-    return { ok: true, saved: n };
+    return { ok: true, saved: n, signedAt: formatTs_(ts) };
   } finally {
     lock.releaseLock();
   }
 }
 
-/** Fetch the signature image (data URL) for a single transaction row. */
+/** Fetch the signature image + signed-at for a single transaction row. */
 function getSignature_(body, params) {
   var row = Number((body && body.row) || (params && params.row));
   const sheet = mustSheet_(TX_SHEET);
   const last = sheet.getLastRow();
   if (!(row >= 2 && row <= last)) return { ok: false, error: 'Transaction not found.' };
-  return { ok: true, signature: sheet.getRange(row, SIGNATURE_COL).getValue() || '' };
+  var when = sheet.getRange(row, SIGNED_AT_COL).getValue();
+  return {
+    ok: true,
+    signature: sheet.getRange(row, SIGNATURE_COL).getValue() || '',
+    signedAt: when ? formatTs_(when) : ''
+  };
 }
 
 /**
@@ -490,7 +500,7 @@ function recordOutput(payload) {
       values[i][5] = balanceAfter;
       txRows.push([ts, 'OUT', values[i][0], values[i][2], values[i][1],
                    want, values[i][4], recipient, handledBy, notes, balanceAfter,
-                   verified ? 'Yes' : 'No', verified ? ts : '', '']);
+                   verified ? 'Yes' : 'No', verified ? ts : '', '', '']);
     });
 
     range.setValues(values);
@@ -579,7 +589,7 @@ function recordInput(payload) {
     appendTransactions_([[
       ts, 'IN', itemId, itemName, category,
       qty, unit, source, handledBy, expNote, balanceAfter,
-      verified ? 'Yes' : 'No', verified ? ts : '', ''
+      verified ? 'Yes' : 'No', verified ? ts : '', '', ''
     ]]);
 
     return {
@@ -630,7 +640,7 @@ function deleteItem_(payload) {
     // Log the removal as an OUT of the remaining stock.
     appendTransactions_([[
       ts, 'OUT', r[0], r[2], r[1], qty, r[4], reason, handledBy,
-      'Item deleted from inventory', 0, verified ? 'Yes' : 'No', verified ? ts : '', ''
+      'Item deleted from inventory', 0, verified ? 'Yes' : 'No', verified ? ts : '', '', ''
     ]]);
     sheet.deleteRow(idx + 2);   // data starts at row 2
 

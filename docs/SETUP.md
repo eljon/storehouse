@@ -142,7 +142,7 @@ you always have a full paper trail.
 - **Updated to a newer version (Expiry / Verification)?** Re-paste the latest
   `apps-script/Code.gs`, save, then run **🏬 Storehouse → ① Set up / load
   starting data** once. It adds the **Expiry** column to the Inventory sheet
-  and the **Verified / Verified At / Signature** columns to the Transactions
+  and the **Verified / Verified At / Signature / Signed At** columns to the Transactions
   sheet without touching your data. Then publish a **new version** of the Web app (*Deploy → Manage
   deployments → ✏️ → New version → Deploy*).
 - **Changing the Bishop's password?** Edit the `BISHOP_PASSWORD` value near the

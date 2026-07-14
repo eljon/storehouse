@@ -280,6 +280,7 @@
     .rc-sig-line { border-top:1.5px solid #0d1b2a; margin-top:2px; }
     .rc-sig-cap { font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:#5b6675; margin-top:6px; }
     .rc-sig-name { font-size:13px; font-weight:600; color:#0d1b2a; margin-top:2px; min-height:16px; }
+    .rc-sig-sub { font-size:11px; color:#77726a; margin-top:2px; min-height:14px; }
     .rc-sig-script { font-family:'Great Vibes','Snell Roundhand','Brush Script MT',cursive; font-size:38px; line-height:1; color:#123a63; transform:rotate(-3deg); padding-bottom:4px; }
     .rc-sig-pending { font-size:12px; color:#b23b3b; font-style:italic; align-self:center; }
     .rc-foot { margin-top:22px; padding-top:12px; border-top:1px solid #eceff2; font-size:11px; color:#77726a; text-align:center; }
@@ -425,6 +426,7 @@
             <div class="rc-sig-line"></div>
             <div class="rc-sig-cap">Recipient's signature</div>
             <div class="rc-sig-name" id="rc_recipient_name"></div>
+            <div class="rc-sig-sub" id="rc_signed_at"></div>
           </div>
           <div class="rc-sig">
             <div class="rc-sig-box" id="rc_bishop_box"></div>
@@ -1305,6 +1307,7 @@
     }).join('') || '<tr><td colspan="3">—</td></tr>';
     document.getElementById('rc_notes').innerHTML = data.notes ? ('<b>Notes:</b> ' + esc(data.notes)) : '';
     document.getElementById('rc_recipient_name').textContent = data.recipient || '';
+    rcRenderSignedAt();
     var box = document.getElementById('rc_bishop_box'), name = document.getElementById('rc_bishop_name');
     if (data.verified) {
       box.innerHTML = '<div class="rc-sig-script">Eljon Serrano</div>';
@@ -1340,6 +1343,9 @@
       rcHasDrawn = false;
     }
   }
+  function rcRenderSignedAt() {
+    document.getElementById('rc_signed_at').textContent = (rcData && rcData.signedAt) ? ('Signed ' + rcData.signedAt) : '';
+  }
   function rcClose() { document.getElementById('receiptModal').classList.remove('show'); document.body.classList.remove('rc-open'); }
   function rcPrint() { window.print(); }
   function rcSignatureDataUrl() {
@@ -1355,11 +1361,12 @@
     if (!(rcData.rows && rcData.rows.length)) { rcPrint(); return; }
     var sig = rcSignatureDataUrl();
     setBusy('rc_save', true, 'Saving…');
-    api('saveSignature', 'POST', { rows: rcData.rows, signature: sig }).then(function () {
+    api('saveSignature', 'POST', { rows: rcData.rows, signature: sig }).then(function (res) {
       setBusy('rc_save', false, 'Save & Print');
       (rcData.rows || []).forEach(function (rw) { var h = HISTORY.filter(function (x) { return x.row === rw; })[0]; if (h) h.signed = true; });
       renderHistory();
-      rcData.mode = 'view'; rcData.signatureImg = sig; applyReceiptMode();
+      rcData.mode = 'view'; rcData.signatureImg = sig; rcData.signedAt = (res && res.signedAt) || nowStr();
+      applyReceiptMode(); rcRenderSignedAt();
       toast('Receipt signed & saved.', false, true);
       setTimeout(rcPrint, 200);
     }).catch(function (e) { setBusy('rc_save', false, 'Save & Print'); toast((e && e.message) || 'Could not save.', true); });
@@ -1400,7 +1407,7 @@
     };
     if (t.signed) {
       api('getSignature', 'GET', { row: row })
-        .then(function (r) { base.mode = 'view'; base.signatureImg = (r && r.signature) || ''; openReceipt(base); })
+        .then(function (r) { base.mode = 'view'; base.signatureImg = (r && r.signature) || ''; base.signedAt = (r && r.signedAt) || ''; openReceipt(base); })
         .catch(function () { base.mode = 'view'; base.signatureImg = ''; openReceipt(base); });
     } else {
       base.mode = 'sign'; openReceipt(base);

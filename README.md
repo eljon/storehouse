@@ -48,7 +48,7 @@ with no server of our own and no Cloud Console.
 The Google Sheet has two tabs, created automatically by `setup()`:
 
 - **`Inventory`** — `ID · Category · Item · Notes/Size · Unit · Quantity · Target · Expiry`
-- **`Transactions`** — `Timestamp · Type · Item ID · Item · Category · Quantity · Unit · Party · Handled By · Notes · Balance After · Verified · Verified At · Signature`
+- **`Transactions`** — `Timestamp · Type · Item ID · Item · Category · Quantity · Unit · Party · Handled By · Notes · Balance After · Verified · Verified At · Signature · Signed At`
 
 The app is **seeded** from the ward's *Emergency Prep Shopping Checklist*
 (2 meals × 60 pax + adult meds + kids meds + first aid + disposables — 40 items),
