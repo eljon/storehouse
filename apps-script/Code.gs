@@ -126,12 +126,40 @@ function jsonOut_(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-/* ============================ Setup / seeding ========================== */
+/* ============================ Menu / setup ============================ */
 
 /**
- * Run ONCE from the Apps Script editor to build the sheets and load the
- * starting inventory. Safe to re-run: it will only (re)seed the Inventory
- * sheet if it is empty, and never touches existing Transactions.
+ * Adds a "Storehouse" menu to the Sheet so you can run setup with a click
+ * instead of using the editor's function dropdown. Runs automatically each
+ * time the spreadsheet is opened.
+ */
+function onOpen() {
+  try {
+    SpreadsheetApp.getUi()
+      .createMenu('🏬 Storehouse')
+      .addItem('① Set up / load starting data', 'menuSetup_')
+      .addToUi();
+  } catch (e) { /* no UI context (e.g. run from editor) — ignore */ }
+}
+
+/** Menu wrapper: runs setup() and shows a confirmation dialog. */
+function menuSetup_() {
+  const seeded = setup();
+  try {
+    const ui = SpreadsheetApp.getUi();
+    ui.alert('🏬 Storehouse',
+      seeded
+        ? 'Done! The Inventory tab now has your ' + SEED_DATA.length + ' starting items.\n\n' +
+          'Next: Deploy → New deployment → Web app to get your app link.'
+        : 'Sheets are ready. Inventory already had data, so it was left as-is.',
+      ui.ButtonSet.OK);
+  } catch (e) { /* ignore if no UI */ }
+}
+
+/**
+ * Run ONCE to build the sheets and load the starting inventory. Safe to
+ * re-run: it only seeds the Inventory sheet when it is empty, and never
+ * touches existing Transactions. Returns true if it seeded the items.
  */
 function setup() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -143,18 +171,23 @@ function setup() {
   ensureHeaders_(tx,  TX_HEADERS);
 
   // Seed inventory only when there is no data yet (headers only).
+  var seeded = false;
   if (inv.getLastRow() <= 1) {
     const rows = SEED_DATA.map(function (r, i) {
       const id = i + 1;                       // ID
       return [id, r[0], r[1], r[2], r[3], r[4], r[4]]; // Quantity & Target = checklist qty
     });
     inv.getRange(2, 1, rows.length, INV_HEADERS.length).setValues(rows);
+    SpreadsheetApp.flush();                   // force the writes to appear immediately
+    seeded = true;
   }
 
   formatInventorySheet_(inv);
   formatTransactionsSheet_(tx);
 
-  SpreadsheetApp.getActiveSpreadsheet().toast('Setup complete. Deploy as a Web app to use the storehouse app.', APP_TITLE, 8);
+  ss.toast(seeded ? 'Loaded ' + SEED_DATA.length + ' items into Inventory.'
+                  : 'Sheets ready (Inventory already had data).', APP_TITLE, 8);
+  return seeded;
 }
 
 function getOrCreateSheet_(ss, name) {

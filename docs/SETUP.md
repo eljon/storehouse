@@ -29,13 +29,23 @@ Do **Part A** first (you'll get a URL), then **Part B**, then paste the URL in.
 > with [`apps-script/appsscript.json`](../apps-script/appsscript.json).
 
 ### A3. Build the sheets & load starting inventory
-1. In the function dropdown at the top, choose **`setup`** → click **▶ Run**.
-2. Authorize when asked:
+
+**Easiest way — the Storehouse menu:**
+1. Go back to the **Sheet** tab and **reload the page** (F5).
+2. A new **🏬 Storehouse** menu appears next to *Help*. Click it →
+   **① Set up / load starting data**.
+3. Authorize when asked:
    - **Review permissions** → pick your Google account.
    - If you see *"Google hasn't verified this app"* (normal for your own
      script): **Advanced → Go to (project) (unsafe) → Allow**.
-3. Back in the Sheet you'll now see an **`Inventory`** tab with the 40
-   emergency-prep items and an empty **`Transactions`** tab.
+   - Click the menu item **again** after authorizing (the first click only
+     grants permission).
+4. You'll get a "Done! Loaded 40 starting items" dialog, and the **`Inventory`**
+   tab will be filled, with an empty **`Transactions`** tab.
+
+> **From the editor instead?** Make sure the function dropdown (next to ▶ Run)
+> says **`setup`** — NOT `doGet`. Running `doGet` reports "Execution completed"
+> but writes nothing. Only `setup` loads the data.
 
 ### A4. Deploy as a Web app (this is your API)
 1. In the editor: **Deploy → New deployment**.
