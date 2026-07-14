@@ -9,7 +9,8 @@ no billing** — anywhere.
 
 | Function | What it does |
 |----------|--------------|
-| 📦 **Check inventory** | Browse current stock, search, filter by category, and spot **IN / LOW / OUT OF STOCK** and **expiry** status at a glance. |
+| 📦 **Check inventory** | Browse current stock as a card grid, search, filter by category, and spot **LOW / OUT OF STOCK** and **expiry** status at a glance. Tap a card for its full history + quick actions. |
+| 🗂️ **Item detail** | Tapping a product card opens a modal with that item's **history** and quick **Take out / Receive / Delete** actions (delete is recorded as an output of the remaining stock). |
 | 📤 **Record output** | Log items leaving the storehouse — recipient name + one or more items picked with a **type-to-search** selector (shows live stock). Stock is validated so you can't over-issue. |
 | 📥 **Record input** | Log items received — find an item with the **searchable** picker, or add a brand-new item on the fly. Optionally set/update an **expiry date**. |
 | ⏰ **Expiry tracking** | Each item can carry an expiry date. Every card shows a human-readable countdown (*Expires in 1 yr 2 mo*, *Expired 6 days ago*). Items due within **3 months** (or already expired) are flagged and counted; tapping the Near-expiry tile lists **all dated items, soonest first**. |

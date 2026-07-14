@@ -124,6 +124,8 @@ function handleRequest_(e, isPost) {
         return jsonOut_(recordOutput(body));
       case 'input':
         return jsonOut_(recordInput(body));
+      case 'deleteItem':
+        return jsonOut_(deleteItem_(body));
       default:
         return jsonOut_({ ok: false, error: 'Unknown action: ' + action });
     }
@@ -340,6 +342,7 @@ function getRecentTransactions(limit) {
       row: startRow + idx,            // absolute sheet row (stable; log is append-only)
       timestamp: r[0] ? formatTs_(r[0]) : '',
       type: r[1],
+      itemId: r[2],
       item: r[3],
       category: r[4],
       quantity: r[5],
@@ -541,6 +544,52 @@ function recordInput(payload) {
     return {
       ok: true,
       message: 'Recorded input of ' + qty + ' ' + unit + ' of "' + itemName + '".' +
+               (verified ? ' Verified by the Bishop.' : ''),
+      verified: verified,
+      dashboard: getDashboard()
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Delete an inventory item. Recorded as an OUTPUT of its remaining stock so
+ * the audit trail keeps a record, then the Inventory row is removed.
+ * payload = { id, handledBy, reason, verifyPassword }.
+ */
+function deleteItem_(payload) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    payload = payload || {};
+    const verified = isBishopVerified_(payload);
+    const handledBy = String(payload.handledBy || '').trim();
+    const reason = String(payload.reason || '').trim() || 'Deleted';
+
+    const sheet = mustSheet_(INVENTORY_SHEET);
+    const last = sheet.getLastRow();
+    if (last <= 1) throw new Error('Item not found. Please refresh.');
+    const values = sheet.getRange(2, 1, last - 1, INV_HEADERS.length).getValues();
+    var idx = -1;
+    for (var k = 0; k < values.length; k++) {
+      if (String(values[k][0]) === String(payload.id)) { idx = k; break; }
+    }
+    if (idx === -1) throw new Error('Item not found. Please refresh.');
+
+    const r = values[idx];
+    const qty = Number(r[5]) || 0;
+    const ts = new Date();
+    // Log the removal as an OUT of the remaining stock.
+    appendTransactions_([[
+      ts, 'OUT', r[0], r[2], r[1], qty, r[4], reason, handledBy,
+      'Item deleted from inventory', 0, verified ? 'Yes' : 'No', verified ? ts : ''
+    ]]);
+    sheet.deleteRow(idx + 2);   // data starts at row 2
+
+    return {
+      ok: true,
+      message: 'Deleted "' + r[2] + '" — recorded as output of ' + qty + ' ' + r[4] + '.' +
                (verified ? ' Verified by the Bishop.' : ''),
       verified: verified,
       dashboard: getDashboard()

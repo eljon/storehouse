@@ -149,7 +149,7 @@
 
     /* inventory card grid (Shopify/Amazon style) */
     .inv-grid { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-    .icard { background:#fff; border:1px solid var(--line); border-radius: var(--r); padding: 15px;
+    .icard { background:#fff; border:1px solid var(--line); border-radius: var(--r); padding: 15px; cursor: pointer;
       box-shadow: var(--sh-sm); display:flex; flex-direction:column; gap: 9px; min-height: 152px; transition: transform .12s, box-shadow .12s, border-color .12s; }
     .icard:hover { border-color:#d5dbe2; box-shadow: var(--sh); transform: translateY(-2px); }
     .icard-name { font-weight:600; font-size:14px; letter-spacing:-.01em; line-height:1.32;
@@ -232,6 +232,23 @@
     .vbtn svg { width:11px; height:11px; }
     .vtx-summary { background:var(--bg); border:1px solid var(--line); border-radius: var(--r-sm);
       padding:11px 13px; font-size:13px; font-weight:600; margin-bottom:16px; color:var(--ink); }
+
+    /* item modal */
+    .im-sheet { max-width: 560px; position: relative; }
+    .im-x { position:absolute; top:14px; right:14px; width:34px; height:34px; border-radius:9px;
+      border:1px solid var(--line); background:#fff; color:var(--muted); cursor:pointer; display:grid; place-items:center; }
+    .im-x svg { width:16px; height:16px; }
+    .im-title { font-size:20px; font-weight:700; letter-spacing:-.02em; padding-right:40px; }
+    .im-meta { font-size:13px; color:var(--muted); margin-top:6px; display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+    .im-meta b { color:var(--ink); }
+    .im-tabs { display:flex; gap:6px; background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:5px; margin:16px 0; }
+    .im-tabs button { flex:1; border:0; background:none; padding:9px 6px; border-radius:8px; font-family:inherit; font-weight:600; font-size:13px; color:var(--muted); cursor:pointer; }
+    .im-tabs button.active { background:#fff; color:var(--navy); box-shadow:var(--sh-sm); }
+    .im-tabs button[data-m="del"].active { color:var(--danger); }
+    .im-warn { background:var(--danger-bg); color:var(--danger); border-radius:10px; padding:11px 13px; font-size:12.5px; line-height:1.5; margin-bottom:13px; }
+    button.primary.danger { background:var(--danger); box-shadow:0 4px 14px rgba(178,59,59,.24); }
+    button.primary.danger:hover { background:#9c3230; }
+    #im_history { max-height:240px; overflow-y:auto; margin-top:2px; }
     .hist-date { font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
       color: var(--navy-deep); margin: 20px 2px 8px; }
     .tx { font-size: 13.5px; padding: 13px 2px; border-bottom:1px solid var(--line); display:flex; gap:12px; }
@@ -317,6 +334,49 @@
       <button class="primary" id="vtx_confirm" onclick="vtxConfirm()">Verify transaction</button>
       <div class="statusline" id="vtx_msg"></div>
       <div style="text-align:center"><button class="linkbtn" style="color:var(--muted)" onclick="vtxClose()">Cancel</button></div>
+    </div>
+  </div>
+
+  <!-- ============ ITEM MODAL ============ -->
+  <div class="overlay" id="itemModal">
+    <div class="sheet im-sheet">
+      <button class="im-x" title="Close" onclick="imClose()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <div class="im-title" id="im_name"></div>
+      <div class="im-meta" id="im_meta"></div>
+
+      <div class="im-tabs">
+        <button data-m="out" class="active" onclick="imSetMode('out')">Take out</button>
+        <button data-m="in" onclick="imSetMode('in')">Receive</button>
+        <button data-m="del" onclick="imSetMode('del')">Delete</button>
+      </div>
+
+      <div class="im-form" id="im_out">
+        <div class="field"><label>Recipient *</label><input id="im_o_recipient" placeholder="Who is receiving the items"></div>
+        <div class="row">
+          <div class="field"><label>Quantity *</label><input id="im_o_qty" type="number" min="1" inputmode="numeric" placeholder="0"></div>
+          <div class="field"><label>Handled by</label><input id="im_o_handled" placeholder="Your name"></div>
+        </div>
+      </div>
+      <div class="im-form" id="im_in" style="display:none">
+        <div class="row">
+          <div class="field"><label>Quantity *</label><input id="im_i_qty" type="number" min="1" inputmode="numeric" placeholder="0"></div>
+          <div class="field"><label>Source</label><input id="im_i_source" placeholder="Donor / purchase"></div>
+        </div>
+        <div class="field"><label>Expiry date (optional)</label><input id="im_i_expiry" type="date"></div>
+      </div>
+      <div class="im-form" id="im_del" style="display:none">
+        <div class="im-warn">This removes the item from inventory and records an <b>output</b> of all remaining stock. This can't be undone.</div>
+        <div class="field"><label>Reason</label><input id="im_d_reason" placeholder="e.g. Expired / no longer stocked"></div>
+      </div>
+
+      <div class="field"><label>Bishop's password (optional)</label>
+        <input id="im_pw" type="password" autocomplete="off" placeholder="Verify this transaction"></div>
+      <button class="primary" id="im_submit" onclick="imSubmit()">Record output</button>
+      <div class="statusline" id="im_msg"></div>
+
+      <hr class="soft">
+      <div class="section-label">Item history</div>
+      <div id="im_history"></div>
     </div>
   </div>
 
@@ -537,7 +597,7 @@
   function loadDashboard() { api('dashboard', 'GET').then(function (d) { onData(d.dashboard); }).catch(onErr); }
   function loadHistory(t) {
     api('transactions', 'GET', { limit: 500 })
-      .then(function (d) { HISTORY = d.transactions || []; renderHistory(); if (t) toast('History refreshed.', false, true); })
+      .then(function (d) { HISTORY = d.transactions || []; renderHistory(); if (document.getElementById('itemModal').classList.contains('show')) renderImHistory(); if (t) toast('History refreshed.', false, true); })
       .catch(function () {});
   }
   function onData(d) { DATA = d; renderStats(); fillCategoryFilter(); fillCatSelect(); renderInventory(); }
@@ -730,7 +790,7 @@
     box.innerHTML = html;
   }
   function itemCard(it) {
-    return '<div class="icard">' +
+    return '<div class="icard" onclick="openItemModal(' + it.id + ')">' +
       '<div class="icard-name">' + esc(it.item) + '</div>' +
       '<div class="icard-sub">' + esc(it.notes || '') + (it.target ? (' · par ' + it.target) : '') + '</div>' +
       '<div class="icard-tags">' + stockPill(it) + expiryBadge(it) + '</div>' +
@@ -1017,6 +1077,87 @@
     var html = '', lastDate = null;
     list.forEach(function (t) { var d = dateOf(t.timestamp); if (d !== lastDate) { html += '<div class="hist-date">' + esc(d) + '</div>'; lastDate = d; } html += txRow(t); });
     box.innerHTML = html;
+  }
+
+  /* ---------- item modal (history + output/input/delete) ---------- */
+  var imItem = null, imMode = 'out';
+  function imMetaHtml(it) {
+    return esc(it.category) + ' · <b>' + it.quantity + '</b> ' + esc(plural(it.unit, it.quantity)) +
+      (it.quantity > 0 ? ' in stock' : '') + (it.expiry ? (' &nbsp;' + expiryBadge(it)) : '');
+  }
+  function openItemModal(id) {
+    imItem = DATA.items.filter(function (i) { return String(i.id) === String(id); })[0];
+    if (!imItem) return;
+    document.getElementById('im_name').textContent = imItem.item;
+    document.getElementById('im_meta').innerHTML = imMetaHtml(imItem);
+    ['im_o_recipient', 'im_o_qty', 'im_o_handled', 'im_i_qty', 'im_i_source', 'im_d_reason', 'im_pw'].forEach(function (x) { document.getElementById(x).value = ''; });
+    document.getElementById('im_i_expiry').value = imItem.expiry || '';
+    document.getElementById('im_msg').textContent = '';
+    imSetMode('out');
+    renderImHistory();
+    document.getElementById('itemModal').classList.add('show');
+  }
+  function imClose() { document.getElementById('itemModal').classList.remove('show'); imItem = null; }
+  function imSetMode(m) {
+    imMode = m;
+    document.querySelectorAll('#itemModal .im-tabs button').forEach(function (b) { b.classList.toggle('active', b.dataset.m === m); });
+    document.getElementById('im_out').style.display = m === 'out' ? 'block' : 'none';
+    document.getElementById('im_in').style.display = m === 'in' ? 'block' : 'none';
+    document.getElementById('im_del').style.display = m === 'del' ? 'block' : 'none';
+    var btn = document.getElementById('im_submit');
+    btn.textContent = (m === 'out') ? 'Record output' : (m === 'in') ? 'Record input' : 'Delete item';
+    btn.classList.toggle('danger', m === 'del');
+    document.getElementById('im_msg').textContent = '';
+  }
+  function imErr(msg) { var el = document.getElementById('im_msg'); el.className = 'statusline err'; el.textContent = msg; }
+  function imSubmit() {
+    if (busy || !imItem) return;
+    var pw = val('im_pw');
+    if (imMode === 'out') {
+      var recipient = val('im_o_recipient'), q = Number(val('im_o_qty'));
+      if (!recipient) return imErr('Enter the recipient name.');
+      if (!(q > 0)) return imErr('Enter a quantity greater than zero.');
+      imCall('output', { recipient: recipient, handledBy: val('im_o_handled'), lines: [{ id: imItem.id, quantity: q }], verifyPassword: pw }, false);
+    } else if (imMode === 'in') {
+      var qi = Number(val('im_i_qty'));
+      if (!(qi > 0)) return imErr('Enter a quantity greater than zero.');
+      imCall('input', { id: imItem.id, quantity: qi, source: val('im_i_source'), expiry: val('im_i_expiry'), verifyPassword: pw }, false);
+    } else {
+      imCall('deleteItem', { id: imItem.id, reason: val('im_d_reason'), verifyPassword: pw }, true);
+    }
+  }
+  function imCall(action, payload, closeAfter) {
+    var msg = document.getElementById('im_msg'); msg.className = 'statusline'; msg.textContent = 'Saving…';
+    setBusy('im_submit', true, 'Saving…');
+    var label = (imMode === 'out') ? 'Record output' : (imMode === 'in') ? 'Record input' : 'Delete item';
+    api(action, 'POST', payload).then(function (res) {
+      setBusy('im_submit', false, label);
+      if (res && res.dashboard) onData(res.dashboard);
+      loadHistory();
+      toast((res && res.message) || 'Saved.', false, true);
+      if (closeAfter) { imClose(); return; }
+      // refresh header + clear the just-used inputs; history refreshes via loadHistory
+      imItem = DATA.items.filter(function (i) { return String(i.id) === String(imItem.id); })[0];
+      if (!imItem) { imClose(); return; }
+      document.getElementById('im_meta').innerHTML = imMetaHtml(imItem);
+      ['im_o_recipient', 'im_o_qty', 'im_i_qty', 'im_i_source', 'im_pw'].forEach(function (x) { document.getElementById(x).value = ''; });
+      msg.textContent = '';
+    }).catch(function (e) { setBusy('im_submit', false, label); imErr((e && e.message) || 'Could not save.'); });
+  }
+  function modalTxRow(t) {
+    var party = t.party ? (t.type === 'OUT' ? 'to ' + t.party : 'from ' + t.party) : '';
+    var v = t.verified ? '<span class="vtag ok">✓ Verified</span>' : '<span class="vtag muted">Unverified</span>';
+    return '<div class="tx"><span class="badge ' + t.type + '">' + t.type + '</span>' +
+      '<div class="d"><div class="t">' + t.quantity + ' ' + esc(plural(t.unit, t.quantity)) + '</div>' +
+      '<div class="s">' + esc(party) + (t.handledBy ? (' · by ' + esc(t.handledBy)) : '') + ' · ' + esc(timeOf(t.timestamp)) + '</div></div>' +
+      '<div class="vwrap">' + v + '</div></div>';
+  }
+  function renderImHistory() {
+    if (!imItem) return;
+    var list = HISTORY.filter(function (t) { return String(t.itemId) === String(imItem.id); });
+    var box = document.getElementById('im_history');
+    box.innerHTML = list.length ? list.map(modalTxRow).join('')
+      : '<div class="empty" style="padding:18px">No history yet for this item.</div>';
   }
 
   /* ---------- utils ---------- */

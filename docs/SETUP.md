@@ -87,8 +87,11 @@ That's it — bookmark the Pages URL / add it to your home screen.
 
 ## Everyday use
 
-- **📦 Inventory** — search or filter by category. Items below their target show
-  a **LOW** badge; empty ones show **OUT**.
+- **📦 Inventory** — a card grid; search or filter by category. Items below their
+  target show a **LOW** badge; empty ones show **OUT**. **Tap any card** to open
+  its detail: the item's full **history** plus quick **Take out / Receive /
+  Delete** actions. *Delete* removes the item and is recorded as an **output** of
+  whatever stock was left.
 - **📤 Output** — enter the recipient, then **type to search** for each item
   taken (the picker shows current stock), add a quantity, **+ Add item** for
   more → **Record Output**. You can't issue more than is in stock.
