@@ -115,7 +115,10 @@ That's it — bookmark the Pages URL / add it to your home screen.
   any unverified row). Each verification is stamped with the date and time.
 - **🕘 History** — every movement in one place. Filter by **All / Restock /
   Distribute**, by **Verified / Unverified**, or use the search box (item,
-  recipient, source, worker). Verified rows show when they were verified.
+  recipient, source, worker). Verified rows show when they were verified. Each
+  row has a **Delete** button (Bishop's password required) that removes the
+  transaction and **reverses its effect on stock** — deleting a distribution
+  returns the items, deleting a restock removes them.
 
 Every input/output is written to the **Transactions** tab with a timestamp, so
 you always have a full paper trail.

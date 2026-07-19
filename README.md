@@ -16,7 +16,7 @@ no billing** — anywhere.
 | ⏰ **Expiry tracking** | Each item can carry an expiry date. Every card shows a human-readable countdown (*Expires in 1 yr 2 mo*, *Expired 6 days ago*). Items due within **3 months** (or already expired) are flagged and counted; tapping the Near-expiry tile lists **all dated items, soonest first**. |
 | 🧾 **Distribution receipt** | Distribute with **Save & print** or **Save only**. The receipt shows all details and a clearly-marked **signature box** the recipient signs (mouse/finger). **Save & Print** stores the signature; when the transaction is verified it also shows **Bishop Eljon Serrano's** signature. Signed distributions show **View receipt** in History, where the saved signatures can be seen and reprinted. |
 | ✅ **Bishop's verification** | Sign off a transaction with the Bishop's password — while recording, or later from History (a **Verify** button on unverified rows). Each verification is stamped with a date/time. |
-| 🕘 **History** | Full log of every movement with **All / Restock / Distribute** and **Verified / Unverified** filters and a search box (by item, recipient, source, or worker), grouped by date. |
+| 🕘 **History** | Full log of every movement with **All / Restock / Distribute** and **Verified / Unverified** filters and a search box (by item, recipient, source, or worker), grouped by date. Any row can be **deleted** (Bishop's password required); the stock movement is **reversed** automatically — a deleted distribution returns its items, a deleted restock removes them. |
 
 **Dashboard tiles** at the top show Items, **Near expiry (≤ 3 months)**, Low
 stock, and Out of stock — the Near expiry / Low / Out tiles are **tap-to-filter**

@@ -128,6 +128,8 @@ function handleRequest_(e, isPost) {
         return jsonOut_(recordInput(body));
       case 'deleteItem':
         return jsonOut_(deleteItem_(body));
+      case 'deleteTx':
+        return jsonOut_(deleteTransaction_(body));
       case 'saveSignature':
         return jsonOut_(saveSignature_(body));
       case 'getSignature':
@@ -649,6 +651,81 @@ function deleteItem_(payload) {
       message: 'Deleted "' + r[2] + '" — recorded as a distribution of ' + qty + ' ' + r[4] + '.' +
                (verified ? ' Verified by the Bishop.' : ''),
       verified: verified,
+      dashboard: getDashboard()
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Delete a single transaction from the log and reverse its effect on stock.
+ * Deleting an OUT (distribution) returns the items to inventory; deleting an
+ * IN (restock) removes them again. Requires the Bishop's password.
+ * payload = { row: Number, verifyPassword: String }.
+ */
+function deleteTransaction_(payload) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    payload = payload || {};
+    // Deleting a transaction rewrites the audit trail — require the password.
+    var pw = payload.verifyPassword;
+    if (pw === undefined || pw === null || pw === '') {
+      throw new Error("The Bishop's password is required to delete a transaction.");
+    }
+    if (String(pw) !== BISHOP_PASSWORD) throw new Error('Incorrect password.');
+
+    const txSheet = mustSheet_(TX_SHEET);
+    const last = txSheet.getLastRow();
+    const row = Number(payload.row);
+    if (!(row >= 2 && row <= last)) {
+      throw new Error('Transaction not found. Please refresh and try again.');
+    }
+    const rec = txSheet.getRange(row, 1, 1, TX_HEADERS.length).getValues()[0];
+    if (!rec[1] || !rec[0]) {
+      throw new Error('Transaction not found. Please refresh and try again.');
+    }
+    const type    = String(rec[1]);          // 'IN' or 'OUT'
+    const itemId  = rec[2];
+    const item    = rec[3];
+    const unit    = rec[6];
+    const qty     = Number(rec[5]) || 0;
+
+    // Reverse the stock movement on the matching inventory item (if it still exists).
+    var adjusted = false, newBalance = null;
+    const invSheet = mustSheet_(INVENTORY_SHEET);
+    const invLast = invSheet.getLastRow();
+    if (invLast > 1 && itemId !== '' && itemId !== null) {
+      const invVals = invSheet.getRange(2, 1, invLast - 1, INV_HEADERS.length).getValues();
+      for (var i = 0; i < invVals.length; i++) {
+        if (String(invVals[i][0]) === String(itemId)) {
+          var cur = Number(invVals[i][5]) || 0;
+          // Undoing an OUT puts stock back; undoing an IN takes it away.
+          var delta = (type === 'OUT') ? qty : -qty;
+          newBalance = cur + delta;
+          if (newBalance < 0) newBalance = 0;
+          invSheet.getRange(i + 2, 6).setValue(newBalance);
+          adjusted = true;
+          break;
+        }
+      }
+    }
+
+    txSheet.deleteRow(row);
+
+    var label = (type === 'OUT') ? 'distribution' : 'restock';
+    var stockMsg = adjusted
+      ? (type === 'OUT'
+          ? ' Returned ' + qty + ' ' + unit + ' to "' + item + '" (now ' + newBalance + ').'
+          : ' Removed ' + qty + ' ' + unit + ' from "' + item + '" (now ' + newBalance + ').')
+      : ' Item is no longer in inventory, so stock was not adjusted.';
+
+    return {
+      ok: true,
+      message: 'Deleted the ' + label + ' of ' + qty + ' ' + unit + ' "' + item + '".' + stockMsg,
+      type: type,
+      adjusted: adjusted,
       dashboard: getDashboard()
     };
   } finally {

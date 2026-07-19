@@ -287,6 +287,8 @@
     .rc-btn { display:inline-flex; align-items:center; gap:5px; background:#fff; border:1px solid var(--navy);
       color:var(--navy); font-weight:700; font-size:11px; padding:6px 11px; border-radius:999px; cursor:pointer; white-space:nowrap; }
     .rc-btn:hover { background:var(--navy); color:#fff; }
+    .rc-btn.del { border-color:var(--danger); color:var(--danger); }
+    .rc-btn.del:hover { background:var(--danger); color:#fff; }
     @media (max-width: 560px) { .rc-meta, .rc-sigs { grid-template-columns:1fr; } }
 
     @media print {
@@ -383,6 +385,22 @@
       <button class="primary" id="vtx_confirm" onclick="vtxConfirm()">Verify transaction</button>
       <div class="statusline" id="vtx_msg"></div>
       <div style="text-align:center"><button class="linkbtn" style="color:var(--muted)" onclick="vtxClose()">Cancel</button></div>
+    </div>
+  </div>
+
+  <!-- ============ DELETE-A-TRANSACTION MODAL ============ -->
+  <div class="overlay" id="dtxOverlay">
+    <div class="sheet">
+      <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#E4DFDA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
+      <h2>Delete transaction</h2>
+      <p>This removes the transaction from the log and reverses its effect on stock. Enter the Bishop's password to confirm.</p>
+      <div class="vtx-summary" id="dtx_summary"></div>
+      <div class="vtx-summary" id="dtx_effect" style="background:#fff3f2;border-color:#f0c9c4;color:#7a2018"></div>
+      <div class="field"><label>Bishop's password</label>
+        <input type="password" id="dtx_pw" autocomplete="off" placeholder="Enter password" onkeydown="if(event.key==='Enter'){event.preventDefault();dtxConfirm();}"></div>
+      <button class="primary danger" id="dtx_confirm" onclick="dtxConfirm()">Delete transaction</button>
+      <div class="statusline" id="dtx_msg"></div>
+      <div style="text-align:center"><button class="linkbtn" style="color:var(--muted)" onclick="dtxClose()">Cancel</button></div>
     </div>
   </div>
 
@@ -1156,6 +1174,45 @@
       msg.className = 'statusline err'; msg.textContent = (e && e.message) || 'Could not verify.';
     });
   }
+  /* Delete a single past transaction (reverses its stock effect). */
+  var currentDtxRow = null;
+  function openDtx(row) {
+    currentDtxRow = row;
+    var t = HISTORY.filter(function (x) { return x.row === row; })[0];
+    document.getElementById('dtx_summary').textContent = t
+      ? (t.type + ' · ' + t.quantity + ' ' + (t.unit || '') + ' ' + t.item + (t.party ? ' · ' + t.party : '') + ' · ' + t.timestamp)
+      : '';
+    var eff = document.getElementById('dtx_effect');
+    if (t) {
+      eff.style.display = 'block';
+      eff.textContent = (t.type === 'OUT')
+        ? '↩ ' + t.quantity + ' ' + plural(t.unit, t.quantity) + ' will be returned to "' + t.item + '".'
+        : '↩ ' + t.quantity + ' ' + plural(t.unit, t.quantity) + ' will be removed from "' + t.item + '".';
+    } else { eff.style.display = 'none'; }
+    document.getElementById('dtx_pw').value = '';
+    document.getElementById('dtx_msg').textContent = '';
+    document.getElementById('dtxOverlay').classList.add('show');
+    setTimeout(function () { document.getElementById('dtx_pw').focus(); }, 50);
+  }
+  function dtxClose() { document.getElementById('dtxOverlay').classList.remove('show'); currentDtxRow = null; }
+  function dtxConfirm() {
+    var pw = document.getElementById('dtx_pw').value || '';
+    var msg = document.getElementById('dtx_msg');
+    if (!pw) { msg.className = 'statusline err'; msg.textContent = 'Enter the password.'; return; }
+    if (currentDtxRow == null) return;
+    msg.className = 'statusline'; msg.textContent = 'Deleting…';
+    setBusy('dtx_confirm', true, 'Deleting…');
+    api('deleteTx', 'POST', { row: currentDtxRow, verifyPassword: pw }).then(function (res) {
+      setBusy('dtx_confirm', false, 'Delete transaction');
+      dtxClose();
+      if (res.dashboard) onData(res.dashboard);
+      loadHistory();                       // rows shift after a delete — reload from the sheet
+      toast(res.message || 'Transaction deleted.', false, true);
+    }).catch(function (e) {
+      setBusy('dtx_confirm', false, 'Delete transaction');
+      msg.className = 'statusline err'; msg.textContent = (e && e.message) || 'Could not delete.';
+    });
+  }
   function dateOf(ts) { var m = String(ts || '').match(/^(.*\d{4})/); return m ? m[1] : (ts || 'Earlier'); }
   function timeOf(ts) { var t = String(ts || '').replace(/^.*\d{4}\s*/, ''); return t || ts || ''; }
   function txRow(t) {
@@ -1168,6 +1225,7 @@
       ' · ' + esc(timeOf(t.timestamp)) + vinfo + '</div></div>' +
       '<div class="vwrap">' + verifyCell(t) +
       (t.type === 'OUT' ? '<button class="rc-btn" type="button" onclick="openReceiptForTx(' + t.row + ')">' + (t.signed ? 'View receipt' : 'Print receipt') + '</button>' : '') +
+      '<button class="rc-btn del" type="button" title="Delete transaction" onclick="openDtx(' + t.row + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Delete</button>' +
       '</div></div>';
   }
   function renderHistory() {
