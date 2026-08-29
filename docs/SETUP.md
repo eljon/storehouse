@@ -96,11 +96,20 @@ That's it — bookmark the Pages URL / add it to your home screen.
   password required) removes the item and is recorded as a **distribution** of
   whatever stock was left.
 - **📤 Distribute** — enter the recipient, then **type to search** for each item
-  taken (the picker shows current stock), add a quantity, **+ Add item** for
-  more → **Distribute**. You can't issue more than is in stock.
-- **📥 Restock** — type to search for an item (or pick **➕ Add a NEW item**), enter
-  the quantity received and the source, and optionally an **expiry date** →
-  **Restock**. (Leaving expiry blank keeps the item's current date.)
+  taken (the picker shows current stock) or **📷 Scan barcode** to add it, set a
+  quantity, **+ Add item** for more → **Distribute**. You can't issue more than
+  is in stock.
+- **📥 Restock** — type to search for an item, **📷 Scan barcode**, or pick
+  **➕ Add a NEW item**, enter the quantity received and the source, and
+  optionally an **expiry date** and **barcode** → **Restock**. (Leaving expiry
+  blank keeps the item's current date.)
+- **📷 Barcode scanning** — the **Scan barcode** buttons on Distribute and
+  Restock open the phone camera and read the item's barcode (using the browser's
+  built-in reader where available; on browsers without it, or with no camera,
+  type or scan the code into the box — a USB/Bluetooth barcode scanner works as a
+  keyboard). A known barcode jumps to that item; an unknown one starts a new item
+  with the code saved. Set or change an item's barcode from its **Edit** tab or
+  when adding it in Restock.
 - **⏰ Expiry** — every item with a date shows a human-readable countdown
   (e.g. *Expires in 1 yr 2 mo*, *Expires in 28 days*, or *Expired 6 days ago*).
   The top **Near expiry** tile counts items due within 3 months (or already
@@ -145,12 +154,13 @@ you always have a full paper trail.
 
 ## Notes
 
-- **Updated to a newer version (Expiry / Verification)?** Re-paste the latest
-  `apps-script/Code.gs`, save, then run **🏬 Storehouse → ① Set up / load
-  starting data** once. It adds the **Expiry** column to the Inventory sheet
-  and the **Verified / Verified At / Signature / Signed At** columns to the Transactions
-  sheet without touching your data. Then publish a **new version** of the Web app (*Deploy → Manage
-  deployments → ✏️ → New version → Deploy*).
+- **Updated to a newer version (Expiry / Verification / Barcode)?** Re-paste the
+  latest `apps-script/Code.gs`, save, then run **🏬 Storehouse → ① Set up / load
+  starting data** once. It adds the **Expiry** and **Barcode** columns to the
+  Inventory sheet and the **Verified / Verified At / Signature / Signed At**
+  columns to the Transactions sheet without touching your data. Then publish a
+  **new version** of the Web app (*Deploy → Manage deployments → ✏️ → New version
+  → Deploy*).
 - **Changing the Bishop's password?** Edit the `BISHOP_PASSWORD` value near the
   top of `apps-script/Code.gs`, save, and publish a **new version**. The
   password lives only in the Apps Script (not in the public GitHub Pages site).

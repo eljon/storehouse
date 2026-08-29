@@ -253,6 +253,7 @@
 
     /* distribution receipt */
     #receiptModal { z-index: 300; }
+    #scanOverlay { z-index: 400; }
     .rc-sheet { max-width: 640px; position: relative; padding: 0; overflow: hidden; }
     .rc-controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding: 14px 16px; border-bottom:1px solid var(--line); background:var(--bg); }
     .rc-controls .im-x { position:static; margin-left:auto; }
@@ -290,6 +291,17 @@
     .rc-btn:hover { background:var(--navy); color:#fff; }
     .rc-btn.del { border-color:var(--danger); color:var(--danger); }
     .rc-btn.del:hover { background:var(--danger); color:#fff; }
+    .line-actions { display:flex; gap:9px; flex-wrap:wrap; }
+    .line-actions button { flex:1; min-width:130px; }
+    .scan-btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+    .bc-row { display:flex; gap:8px; align-items:stretch; }
+    .bc-row input { flex:1; min-width:0; }
+    .bc-row button { flex:0 0 auto; white-space:nowrap; }
+    .scan-sheet { max-width:440px; }
+    .scan-camwrap { position:relative; width:100%; aspect-ratio:4/3; background:#000; border-radius:14px; overflow:hidden; margin:4px 0 12px; }
+    .scan-camwrap video { width:100%; height:100%; object-fit:cover; display:block; }
+    .scan-reticle { position:absolute; inset:18% 12%; border:3px solid rgba(255,255,255,.9); border-radius:12px; box-shadow:0 0 0 100vmax rgba(0,0,0,.28); pointer-events:none; }
+    .scan-note { font-size:13px; color:var(--muted); text-align:center; margin-bottom:12px; line-height:1.5; }
     @media (max-width: 560px) { .rc-meta, .rc-sigs { grid-template-columns:1fr; } }
 
     @media print {
@@ -405,6 +417,24 @@
     </div>
   </div>
 
+  <!-- ============ BARCODE SCANNER MODAL ============ -->
+  <div class="overlay" id="scanOverlay">
+    <div class="sheet scan-sheet">
+      <button class="im-x" title="Close" onclick="stopScanner()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <h2>Scan barcode</h2>
+      <div class="scan-camwrap" id="scan_camwrap">
+        <video id="scan_video" playsinline muted></video>
+        <div class="scan-reticle"></div>
+      </div>
+      <div class="scan-note" id="scan_note">Starting camera…</div>
+      <div class="field"><label>Or enter the barcode</label>
+        <div class="bc-row"><input id="scan_manual" autocomplete="off" inputmode="numeric" placeholder="Type or scan into this box" onkeydown="if(event.key==='Enter'){event.preventDefault();scanManual();}">
+          <button class="primary" type="button" onclick="scanManual()">Use code</button></div>
+        <div class="hint">A USB/Bluetooth barcode scanner types into this box — just scan while it's focused.</div></div>
+      <div class="statusline" id="scan_msg"></div>
+    </div>
+  </div>
+
   <!-- ============ DISTRIBUTION RECEIPT ============ -->
   <div class="overlay" id="receiptModal">
     <div class="sheet rc-sheet">
@@ -499,6 +529,9 @@
           <div class="field"><label>Target (par level)</label><input id="im_e_target" type="number" min="0" inputmode="numeric" placeholder="0"></div>
         </div>
         <div class="field"><label>Expiry date (optional)</label><input id="im_e_expiry" type="date"></div>
+        <div class="field"><label>Barcode (optional)</label>
+          <div class="bc-row"><input id="im_e_barcode" placeholder="Scan or type the barcode">
+            <button class="ghost scan-btn" type="button" onclick="scanIntoField('im_e_barcode')">📷 Scan</button></div></div>
       </div>
       <div class="im-form" id="im_del" style="display:none">
         <div class="im-warn">This removes the item from inventory and records a <b>distribution</b> of the remaining quantity. This can't be undone.</div>
@@ -562,7 +595,10 @@
           <hr class="soft">
           <label>Items to distribute * — type to search</label>
           <div id="outLines"></div>
-          <button class="ghost" type="button" onclick="addOutLine()">+ Add item</button>
+          <div class="line-actions">
+            <button class="ghost" type="button" onclick="addOutLine()">+ Add item</button>
+            <button class="ghost scan-btn" type="button" onclick="scanForDistribute()">📷 Scan barcode</button>
+          </div>
           <hr class="soft">
           <div class="field"><label>Notes (optional)</label>
             <textarea id="o_notes" placeholder="Reason / approval / remarks"></textarea></div>
@@ -595,7 +631,8 @@
         <div class="card">
           <h2>Restock<span>Items received into the storehouse</span></h2>
           <div class="field"><label>Item * — type to search, or add new</label>
-            <div id="i_item_combo"></div></div>
+            <div id="i_item_combo"></div>
+            <button class="ghost scan-btn" type="button" style="margin-top:9px" onclick="scanForRestock()">📷 Scan barcode</button></div>
           <div id="newItemFields" style="display:none;">
             <div class="row">
               <div class="field"><label>New item name *</label><input id="i_name" placeholder="Item name"></div>
@@ -612,6 +649,9 @@
                 <input id="i_target" type="number" min="0" inputmode="numeric" placeholder="0"></div>
             </div>
             <div class="field"><label>Notes / size</label><input id="i_itemnotes" placeholder="e.g. 155g can"></div>
+            <div class="field"><label>Barcode (optional)</label>
+              <div class="bc-row"><input id="i_barcode" placeholder="Scan or type the barcode">
+                <button class="ghost scan-btn" type="button" onclick="scanIntoField('i_barcode')">📷 Scan</button></div></div>
           </div>
           <div class="row">
             <div class="field"><label>Quantity received *</label>
@@ -1005,6 +1045,9 @@
     input.addEventListener('blur', function () { setTimeout(close, 150); });
     clear.addEventListener('mousedown', function (e) { e.preventDefault(); setValue(null, ''); input.value = ''; input.placeholder = opts.placeholder || 'Search item…'; input.focus(); open(); });
     wrap.reset = function () { setValue(null, ''); input.value = ''; input.placeholder = opts.placeholder || 'Search item…'; };
+    // Programmatic selection (used by the barcode scanner).
+    wrap.selectId = function (id, label) { setValue(id, label); close(); };
+    wrap.selectNew = function (typed) { setValue('__new__', '', typed || ''); input.value = ''; input.placeholder = 'Adding a new item…'; close(); };
     return wrap;
   }
 
@@ -1110,6 +1153,7 @@
       payload.unit = val('i_unit') || 'pc';
       payload.itemNotes = val('i_itemnotes');
       payload.target = Number(val('i_target')) || 0;
+      payload.barcode = val('i_barcode');
     } else { payload.id = Number(sel); }
     payload.verifyPassword = verifyPw.i;
     setBusy('i_submit', true, 'Recording…');
@@ -1118,7 +1162,7 @@
       .catch(function (e) { afterErr('i_submit', 'Restock', e); });
   }
   function resetInput() {
-    ['i_qty', 'i_source', 'i_notes', 'i_name', 'i_unit', 'i_cat_new', 'i_target', 'i_itemnotes', 'i_expiry'].forEach(function (id) {
+    ['i_qty', 'i_source', 'i_notes', 'i_name', 'i_unit', 'i_cat_new', 'i_target', 'i_itemnotes', 'i_expiry', 'i_barcode'].forEach(function (id) {
       document.getElementById(id).value = '';
     });
     document.getElementById('i_cat_sel').value = '';
@@ -1126,6 +1170,102 @@
     if (inputCombo && inputCombo.reset) inputCombo.reset();
     onInputComboChange('');
     verifyReset('i');
+  }
+
+  /* ---------- barcode scanning ---------- */
+  var scanStream = null, scanRAF = null, scanDetector = null, scanCb = null, scanActive = false;
+  function normBarcode(s) { return String(s == null ? '' : s).replace(/\s+/g, '').trim(); }
+  function findItemByBarcode(code) {
+    code = normBarcode(code);
+    if (!code) return null;
+    return (DATA.items || []).filter(function (i) { return normBarcode(i.barcode) && normBarcode(i.barcode) === code; })[0] || null;
+  }
+  function startScanner(onResult) {
+    scanCb = onResult;
+    document.getElementById('scan_msg').textContent = '';
+    document.getElementById('scan_manual').value = '';
+    document.getElementById('scanOverlay').classList.add('show');
+    var camWrap = document.getElementById('scan_camwrap');
+    var note = document.getElementById('scan_note');
+    var video = document.getElementById('scan_video');
+    var canScanLive = ('BarcodeDetector' in window);
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      camWrap.style.display = 'none';
+      note.textContent = 'No camera here. Type or scan the barcode into the box below.';
+      setTimeout(function () { document.getElementById('scan_manual').focus(); }, 60);
+      return;
+    }
+    camWrap.style.display = 'block';
+    note.textContent = 'Starting camera…';
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
+      .then(function (stream) {
+        scanStream = stream; video.srcObject = stream;
+        var p = video.play(); if (p && p.catch) p.catch(function () {});
+        if (canScanLive) {
+          try { scanDetector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'codabar', 'itf'] }); }
+          catch (e) { try { scanDetector = new BarcodeDetector(); } catch (e2) { scanDetector = null; } }
+        }
+        if (scanDetector) { scanActive = true; note.textContent = 'Point the camera at the barcode.'; scanLoop(); }
+        else { note.textContent = "This browser can't read barcodes from the camera. Type or scan into the box below."; }
+      })
+      .catch(function (err) {
+        camWrap.style.display = 'none';
+        note.textContent = 'Could not open the camera (' + ((err && err.name) || 'error') + '). Type or scan the barcode below.';
+        setTimeout(function () { document.getElementById('scan_manual').focus(); }, 60);
+      });
+  }
+  function scanLoop() {
+    if (!scanActive || !scanDetector) return;
+    var video = document.getElementById('scan_video');
+    if (video && video.readyState >= 2) {
+      scanDetector.detect(video).then(function (codes) {
+        if (!scanActive) return;
+        if (codes && codes.length && codes[0].rawValue) { scanResult(codes[0].rawValue); return; }
+        scanRAF = requestAnimationFrame(scanLoop);
+      }).catch(function () { if (scanActive) scanRAF = requestAnimationFrame(scanLoop); });
+    } else {
+      scanRAF = requestAnimationFrame(scanLoop);
+    }
+  }
+  function scanManual() {
+    var v = normBarcode(document.getElementById('scan_manual').value);
+    if (!v) { document.getElementById('scan_msg').className = 'statusline err'; document.getElementById('scan_msg').textContent = 'Enter a barcode.'; return; }
+    scanResult(v);
+  }
+  function scanResult(code) {
+    var cb = scanCb;
+    stopScanner();
+    if (cb) cb(normBarcode(code));
+  }
+  function stopScanner() {
+    scanActive = false;
+    if (scanRAF) { cancelAnimationFrame(scanRAF); scanRAF = null; }
+    if (scanStream) { scanStream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} }); scanStream = null; }
+    var video = document.getElementById('scan_video'); if (video) video.srcObject = null;
+    scanDetector = null; scanCb = null;
+    document.getElementById('scanOverlay').classList.remove('show');
+  }
+  // Scan straight into a text field (barcode inputs on the Edit / new-item forms).
+  function scanIntoField(id) { startScanner(function (code) { var el = document.getElementById(id); if (el) el.value = code; toast('Barcode ' + code + ' captured.', false, true); }); }
+  // Distribute: scan → find item → drop it into an item row.
+  function scanForDistribute() { startScanner(onDistributeScan); }
+  function onDistributeScan(code) {
+    var it = findItemByBarcode(code);
+    if (!it) { toast('No item matches barcode ' + code + '. Add it first via Restock.', true); return; }
+    var rows = document.querySelectorAll('#outLines .lineitem');
+    var target = null;
+    Array.prototype.forEach.call(rows, function (row) { if (!target && !row.querySelector('.combo').dataset.value) target = row; });
+    if (!target) { addOutLine(); rows = document.querySelectorAll('#outLines .lineitem'); target = rows[rows.length - 1]; }
+    target.querySelector('.combo').selectId(it.id, it.item);
+    var qty = target.querySelector('.ol-qty'); if (qty) qty.focus();
+    toast('Added ' + it.item + ' from barcode.', false, true);
+  }
+  // Restock: scan → select the item, or start a new item with the barcode saved.
+  function scanForRestock() { startScanner(onRestockScan); }
+  function onRestockScan(code) {
+    var it = findItemByBarcode(code);
+    if (it) { inputCombo.selectId(it.id, it.item); toast('Selected ' + it.item + ' from barcode.', false, true); }
+    else { inputCombo.selectNew(''); document.getElementById('i_barcode').value = code; toast('New item — barcode ' + code + ' saved. Enter its name.', false, true); }
   }
 
   /* ---------- shared write ---------- */
@@ -1315,6 +1455,7 @@
     document.getElementById('im_e_unit').value = imItem.unit || '';
     document.getElementById('im_e_target').value = (imItem.target != null ? imItem.target : '');
     document.getElementById('im_e_expiry').value = imItem.expiry || '';
+    document.getElementById('im_e_barcode').value = imItem.barcode || '';
   }
   function imErr(msg) { var el = document.getElementById('im_msg'); el.className = 'statusline err'; el.textContent = msg; }
   function imPrimary() { imSubmit(imMode === 'out'); }   // print a receipt only for a distribution
@@ -1337,7 +1478,7 @@
       imCall('editItem', { id: imItem.id, item: ename, category: val('im_e_category'),
         itemNotes: val('im_e_notes'), unit: val('im_e_unit'),
         target: document.getElementById('im_e_target').value.trim(),
-        expiry: val('im_e_expiry') }, false, null, 'im_submit');
+        expiry: val('im_e_expiry'), barcode: val('im_e_barcode') }, false, null, 'im_submit');
     } else {
       if (!pw) return imErr("The Bishop's password is required to delete an item.");
       imCall('deleteItem', { id: imItem.id, reason: val('im_d_reason'), verifyPassword: pw }, true, null, 'im_submit');

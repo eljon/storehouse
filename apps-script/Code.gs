@@ -19,7 +19,7 @@
 const INVENTORY_SHEET = 'Inventory';
 const TX_SHEET        = 'Transactions';
 
-const INV_HEADERS = ['ID', 'Category', 'Item', 'Notes / Size', 'Unit', 'Quantity', 'Target', 'Expiry'];
+const INV_HEADERS = ['ID', 'Category', 'Item', 'Notes / Size', 'Unit', 'Quantity', 'Target', 'Expiry', 'Barcode'];
 
 // Items expiring within this many days count as "near expiry".
 const NEAR_EXPIRY_DAYS = 90;
@@ -203,8 +203,8 @@ function setup() {
   if (inv.getLastRow() <= 1) {
     const rows = SEED_DATA.map(function (r, i) {
       const id = i + 1;                       // ID
-      // Quantity & Target = checklist qty; Expiry blank (set it as you restock).
-      return [id, r[0], r[1], r[2], r[3], r[4], r[4], ''];
+      // Quantity & Target = checklist qty; Expiry + Barcode blank (set them as you go).
+      return [id, r[0], r[1], r[2], r[3], r[4], r[4], '', ''];
     });
     inv.getRange(2, 1, rows.length, INV_HEADERS.length).setValues(rows);
     SpreadsheetApp.flush();                   // force the writes to appear immediately
@@ -271,7 +271,8 @@ function getInventory() {
         target: Number(r[6]) || 0,
         expiry: expiry,                 // 'yyyy-MM-dd' or ''
         daysToExpiry: exp.days,         // number or null
-        expStatus: exp.status           // 'expired' | 'near' | 'ok' | 'none'
+        expStatus: exp.status,          // 'expired' | 'near' | 'ok' | 'none'
+        barcode: r[8] === '' || r[8] === null || r[8] === undefined ? '' : String(r[8]).trim()
       };
     });
 
@@ -549,6 +550,7 @@ function recordInput(payload) {
     const handledBy = String(payload.handledBy || '').trim();
     const notes     = String(payload.notes || '').trim();
     const expiry    = normExpiryInput_(payload.expiry);
+    const barcode   = normBarcode_(payload.barcode);
     const verified  = isBishopVerified_(payload);
 
     if (!(qty > 0)) throw new Error('Please enter a quantity greater than zero.');
@@ -568,7 +570,8 @@ function recordInput(payload) {
       if (i === -1) throw new Error('Item not found (ID ' + payload.id + '). Try refreshing.');
       balanceAfter = (Number(values[i][5]) || 0) + qty;
       values[i][5] = balanceAfter;
-      if (expiry) values[i][7] = expiry;   // update expiry only when provided
+      if (expiry) values[i][7] = expiry;    // update expiry only when provided
+      if (barcode) values[i][8] = barcode;  // attach/refresh a barcode when scanned
       itemId = values[i][0];
       itemName = values[i][2];
       category = values[i][1];
@@ -585,7 +588,7 @@ function recordInput(payload) {
 
       itemId = nextId_(values);
       balanceAfter = qty;
-      sheet.appendRow([itemId, category, itemName, itemNotes, unit, qty, target, expiry]);
+      sheet.appendRow([itemId, category, itemName, itemNotes, unit, qty, target, expiry, barcode]);
     }
 
     var expNote = expiry ? (notes ? notes + ' ' : '') + '(exp ' + expiry + ')' : notes;
@@ -707,7 +710,10 @@ function editItem_(payload) {
     var expiry = r[7];
     if (payload.expiry !== undefined) expiry = normExpiryInput_(payload.expiry);  // '' clears it
 
-    r[1] = category; r[2] = name; r[3] = notes; r[4] = unit; r[6] = target; r[7] = expiry;
+    var barcode = r[8];
+    if (payload.barcode !== undefined) barcode = normBarcode_(payload.barcode);   // '' clears it
+
+    r[1] = category; r[2] = name; r[3] = notes; r[4] = unit; r[6] = target; r[7] = expiry; r[8] = barcode;
     sheet.getRange(idx + 2, 1, 1, INV_HEADERS.length).setValues([r]);
 
     return { ok: true, message: 'Updated "' + name + '".', dashboard: getDashboard() };
@@ -804,6 +810,12 @@ function isBishopVerified_(payload) {
   var pw = payload && payload.verifyPassword;
   if (pw === undefined || pw === null || pw === '') return false;
   return String(pw) === BISHOP_PASSWORD;
+}
+
+/** Normalizes a scanned/typed barcode to a trimmed string ('' when blank). */
+function normBarcode_(v) {
+  if (v === '' || v === null || v === undefined) return '';
+  return String(v).replace(/\s+/g, '').trim();
 }
 
 /** Accepts '' or a 'yyyy-MM-dd' string; returns a clean 'yyyy-MM-dd' or ''. */

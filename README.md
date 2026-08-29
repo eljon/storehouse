@@ -12,8 +12,9 @@ no billing** — anywhere.
 | 📦 **Check inventory** | Browse current stock as a card grid, search, filter by category, and spot **LOW / OUT OF STOCK** and **expiry** status at a glance. Tap a card for its full history + quick actions. |
 | 🗂️ **Item detail** | Tapping a product card opens a modal with that item's **history** and quick **Distribute / Restock / Edit / Delete** actions (delete is recorded as a distribution of the remaining stock). |
 | ✏️ **Edit item** | Correct an item's **name, category, notes/size, unit, target (par level), and expiry** from its detail modal. Quantity is deliberately left to **Restock / Distribute** so the running-balance audit trail stays intact. |
-| 📤 **Distribute** | Log items leaving the storehouse — recipient name + one or more items picked with a **type-to-search** selector (shows live stock). Stock is validated so you can't over-issue. |
-| 📥 **Restock** | Log items received — find an item with the **searchable** picker, or add a brand-new item on the fly. Optionally set/update an **expiry date**. |
+| 📤 **Distribute** | Log items leaving the storehouse — recipient name + one or more items picked with a **type-to-search** selector (shows live stock) or by **scanning a barcode**. Stock is validated so you can't over-issue. |
+| 📥 **Restock** | Log items received — find an item with the **searchable** picker, **scan its barcode**, or add a brand-new item on the fly. Optionally set/update an **expiry date** and a **barcode**. |
+| 📷 **Barcode scanning** | On Distribute and Restock, tap **Scan barcode** to read an item's barcode with the phone camera (uses the browser's built-in scanner where available) and jump straight to that item. Unknown codes start a new item with the barcode saved. A USB/Bluetooth scanner works too — it types into the box. Assign or edit an item's barcode from the item's **Edit** tab or when adding it. |
 | ⏰ **Expiry tracking** | Each item can carry an expiry date. Every card shows a human-readable countdown (*Expires in 1 yr 2 mo*, *Expired 6 days ago*). Items due within **3 months** (or already expired) are flagged and counted; tapping the Near-expiry tile lists **all dated items, soonest first**. |
 | 🧾 **Distribution receipt** | Distribute with **Save & print** or **Save only**. The receipt shows all details and a clearly-marked **signature box** the recipient signs (mouse/finger). **Save & Print** stores the signature; when the transaction is verified it also shows **Bishop Eljon Serrano's** signature. Signed distributions show **View receipt** in History, where the saved signatures can be seen and reprinted. |
 | ✅ **Bishop's verification** | Sign off a transaction with the Bishop's password — while recording, or later from History (a **Verify** button on unverified rows). Each verification is stamped with a date/time. |
@@ -48,7 +49,7 @@ with no server of our own and no Cloud Console.
 
 The Google Sheet has two tabs, created automatically by `setup()`:
 
-- **`Inventory`** — `ID · Category · Item · Notes/Size · Unit · Quantity · Target · Expiry`
+- **`Inventory`** — `ID · Category · Item · Notes/Size · Unit · Quantity · Target · Expiry · Barcode`
 - **`Transactions`** — `Timestamp · Type · Item ID · Item · Category · Quantity · Unit · Party · Handled By · Notes · Balance After · Verified · Verified At · Signature · Signed At`
 
 The app is **seeded** from the ward's *Emergency Prep Shopping Checklist*
