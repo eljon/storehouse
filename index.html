@@ -246,6 +246,7 @@
     .im-tabs button.active { background:#fff; color:var(--navy); box-shadow:var(--sh-sm); }
     .im-tabs button[data-m="del"].active { color:var(--danger); }
     .im-warn { background:var(--danger-bg); color:var(--danger); border-radius:10px; padding:11px 13px; font-size:12.5px; line-height:1.5; margin-bottom:13px; }
+    .im-note { background:var(--bg); color:var(--muted); border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:12.5px; line-height:1.5; margin-bottom:13px; }
     button.primary.danger { background:var(--danger); box-shadow:0 4px 14px rgba(178,59,59,.24); }
     button.primary.danger:hover { background:#9c3230; }
     #im_history { max-height:240px; overflow-y:auto; margin-top:2px; }
@@ -470,6 +471,7 @@
       <div class="im-tabs">
         <button data-m="out" class="active" onclick="imSetMode('out')">Distribute</button>
         <button data-m="in" onclick="imSetMode('in')">Restock</button>
+        <button data-m="edit" onclick="imSetMode('edit')">Edit</button>
         <button data-m="del" onclick="imSetMode('del')">Delete</button>
       </div>
 
@@ -487,12 +489,23 @@
         </div>
         <div class="field"><label>Expiry date (optional)</label><input id="im_i_expiry" type="date"></div>
       </div>
+      <div class="im-form" id="im_edit" style="display:none">
+        <div class="im-note">Edit the item's details. To change the <b>quantity in stock</b>, use <b>Restock</b> or <b>Distribute</b> so the audit trail stays correct.</div>
+        <div class="field"><label>Item name *</label><input id="im_e_name" placeholder="Item name"></div>
+        <div class="field"><label>Category</label><input id="im_e_category" list="im_e_cats" placeholder="Category"><datalist id="im_e_cats"></datalist></div>
+        <div class="field"><label>Notes / size</label><input id="im_e_notes" placeholder="e.g. 155g can"></div>
+        <div class="row">
+          <div class="field"><label>Unit</label><input id="im_e_unit" placeholder="e.g. can, box, pc"></div>
+          <div class="field"><label>Target (par level)</label><input id="im_e_target" type="number" min="0" inputmode="numeric" placeholder="0"></div>
+        </div>
+        <div class="field"><label>Expiry date (optional)</label><input id="im_e_expiry" type="date"></div>
+      </div>
       <div class="im-form" id="im_del" style="display:none">
         <div class="im-warn">This removes the item from inventory and records a <b>distribution</b> of the remaining quantity. This can't be undone.</div>
         <div class="field"><label>Reason</label><input id="im_d_reason" placeholder="e.g. Expired / no longer stocked"></div>
       </div>
 
-      <div class="field"><label id="im_pw_label">Bishop's password (optional)</label>
+      <div class="field" id="im_pw_field"><label id="im_pw_label">Bishop's password (optional)</label>
         <input id="im_pw" type="password" autocomplete="off" placeholder="Verify this transaction"></div>
       <button class="primary" id="im_submit" onclick="imPrimary()">Save &amp; print receipt</button>
       <button class="ghost" id="im_saveonly" onclick="imSubmit(false)" style="width:100%; margin-top:9px; display:none">Save only</button>
@@ -1278,14 +1291,30 @@
     document.querySelectorAll('#itemModal .im-tabs button').forEach(function (b) { b.classList.toggle('active', b.dataset.m === m); });
     document.getElementById('im_out').style.display = m === 'out' ? 'block' : 'none';
     document.getElementById('im_in').style.display = m === 'in' ? 'block' : 'none';
+    document.getElementById('im_edit').style.display = m === 'edit' ? 'block' : 'none';
     document.getElementById('im_del').style.display = m === 'del' ? 'block' : 'none';
+    if (m === 'edit') imFillEdit();
     var btn = document.getElementById('im_submit');
-    btn.textContent = (m === 'out') ? 'Save & print receipt' : (m === 'in') ? 'Restock' : 'Delete item';
+    btn.textContent = (m === 'out') ? 'Save & print receipt' : (m === 'in') ? 'Restock' : (m === 'edit') ? 'Save changes' : 'Delete item';
     btn.classList.toggle('danger', m === 'del');
     document.getElementById('im_saveonly').style.display = (m === 'out') ? 'block' : 'none';
+    // Editing item details isn't a stock transaction, so no verification password.
+    document.getElementById('im_pw_field').style.display = (m === 'edit') ? 'none' : 'block';
     document.getElementById('im_pw_label').textContent = (m === 'del')
       ? "Bishop's password (required)" : "Bishop's password (optional)";
     document.getElementById('im_msg').textContent = '';
+  }
+  function imFillEdit() {
+    if (!imItem) return;
+    var dl = document.getElementById('im_e_cats');
+    dl.innerHTML = '';
+    (DATA.categories || []).forEach(function (c) { var o = document.createElement('option'); o.value = c; dl.appendChild(o); });
+    document.getElementById('im_e_name').value = imItem.item || '';
+    document.getElementById('im_e_category').value = imItem.category || '';
+    document.getElementById('im_e_notes').value = imItem.notes || '';
+    document.getElementById('im_e_unit').value = imItem.unit || '';
+    document.getElementById('im_e_target').value = (imItem.target != null ? imItem.target : '');
+    document.getElementById('im_e_expiry').value = imItem.expiry || '';
   }
   function imErr(msg) { var el = document.getElementById('im_msg'); el.className = 'statusline err'; el.textContent = msg; }
   function imPrimary() { imSubmit(imMode === 'out'); }   // print a receipt only for a distribution
@@ -1302,6 +1331,13 @@
       var qi = Number(val('im_i_qty'));
       if (!(qi > 0)) return imErr('Enter a quantity greater than zero.');
       imCall('input', { id: imItem.id, quantity: qi, source: val('im_i_source'), expiry: val('im_i_expiry'), verifyPassword: pw }, false, null, 'im_submit');
+    } else if (imMode === 'edit') {
+      var ename = val('im_e_name');
+      if (!ename) return imErr('Item name cannot be empty.');
+      imCall('editItem', { id: imItem.id, item: ename, category: val('im_e_category'),
+        itemNotes: val('im_e_notes'), unit: val('im_e_unit'),
+        target: document.getElementById('im_e_target').value.trim(),
+        expiry: val('im_e_expiry') }, false, null, 'im_submit');
     } else {
       if (!pw) return imErr("The Bishop's password is required to delete an item.");
       imCall('deleteItem', { id: imItem.id, reason: val('im_d_reason'), verifyPassword: pw }, true, null, 'im_submit');
@@ -1321,8 +1357,10 @@
       if (closeAfter) { imClose(); return; }
       imItem = DATA.items.filter(function (i) { return String(i.id) === String(imItem.id); })[0];
       if (!imItem) { imClose(); return; }
+      document.getElementById('im_name').textContent = imItem.item;
       document.getElementById('im_meta').innerHTML = imMetaHtml(imItem);
       ['im_o_recipient', 'im_o_qty', 'im_i_qty', 'im_i_source', 'im_pw'].forEach(function (x) { document.getElementById(x).value = ''; });
+      if (imMode === 'edit') imFillEdit();
       msg.textContent = '';
     }).catch(function (e) { setBusy(btnId, false, restore); imErr((e && e.message) || 'Could not save.'); });
   }

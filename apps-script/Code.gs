@@ -128,6 +128,8 @@ function handleRequest_(e, isPost) {
         return jsonOut_(recordInput(body));
       case 'deleteItem':
         return jsonOut_(deleteItem_(body));
+      case 'editItem':
+        return jsonOut_(editItem_(body));
       case 'deleteTx':
         return jsonOut_(deleteTransaction_(body));
       case 'saveSignature':
@@ -653,6 +655,62 @@ function deleteItem_(payload) {
       verified: verified,
       dashboard: getDashboard()
     };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Edit an item's descriptive fields (category, name, notes/size, unit, target,
+ * expiry). Quantity is intentionally NOT editable here — stock changes go
+ * through Restock / Distribute so the running-balance audit trail stays intact.
+ * payload = { id, category, item, itemNotes, unit, target, expiry }.
+ * Any field left undefined keeps its current value; expiry '' clears the date.
+ */
+function editItem_(payload) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    payload = payload || {};
+    const id = payload.id;
+    if (id === null || id === undefined || id === '') throw new Error('Missing item id.');
+
+    const sheet = mustSheet_(INVENTORY_SHEET);
+    const last = sheet.getLastRow();
+    if (last <= 1) throw new Error('Item not found. Please refresh.');
+    const values = sheet.getRange(2, 1, last - 1, INV_HEADERS.length).getValues();
+    var idx = -1;
+    for (var k = 0; k < values.length; k++) {
+      if (String(values[k][0]) === String(id)) { idx = k; break; }
+    }
+    if (idx === -1) throw new Error('Item not found. Please refresh.');
+
+    const r = values[idx];
+    var keep = function (v, cur) { return (v === undefined || v === null) ? cur : v; };
+
+    var name = String(keep(payload.item, r[2])).trim();
+    if (!name) throw new Error('Item name cannot be empty.');
+    var category = String(keep(payload.category, r[1])).trim() || 'Uncategorized';
+    var notes = String(keep(payload.itemNotes, r[3])).trim();
+    var unit = String(keep(payload.unit, r[4])).trim() || 'pc';
+
+    var target = r[6];
+    if (payload.target !== undefined && payload.target !== null) {
+      if (payload.target === '') { target = 0; }
+      else {
+        var t = Number(payload.target);
+        if (isNaN(t) || t < 0) throw new Error('Target must be a number of 0 or more.');
+        target = t;
+      }
+    }
+
+    var expiry = r[7];
+    if (payload.expiry !== undefined) expiry = normExpiryInput_(payload.expiry);  // '' clears it
+
+    r[1] = category; r[2] = name; r[3] = notes; r[4] = unit; r[6] = target; r[7] = expiry;
+    sheet.getRange(idx + 2, 1, 1, INV_HEADERS.length).setValues([r]);
+
+    return { ok: true, message: 'Updated "' + name + '".', dashboard: getDashboard() };
   } finally {
     lock.releaseLock();
   }

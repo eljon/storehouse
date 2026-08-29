@@ -90,7 +90,10 @@ That's it — bookmark the Pages URL / add it to your home screen.
 - **📦 Inventory** — a card grid; search or filter by category. Items below their
   target show a **LOW** badge; empty ones show **OUT**. **Tap any card** to open
   its detail: the item's full **history** plus quick **Distribute / Restock /
-  Delete** actions. *Delete* (Bishop's password required) removes the item and is recorded as a **distribution** of
+  Edit / Delete** actions. *Edit* corrects the item's **name, category,
+  notes/size, unit, target, and expiry** (quantity is changed only through
+  Restock / Distribute, to keep the audit trail correct). *Delete* (Bishop's
+  password required) removes the item and is recorded as a **distribution** of
   whatever stock was left.
 - **📤 Distribute** — enter the recipient, then **type to search** for each item
   taken (the picker shows current stock), add a quantity, **+ Add item** for
