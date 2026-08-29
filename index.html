@@ -1173,12 +1173,34 @@
   }
 
   /* ---------- barcode scanning ---------- */
-  var scanStream = null, scanRAF = null, scanDetector = null, scanCb = null, scanActive = false;
+  var scanStream = null, scanRAF = null, scanDetector = null, scanCb = null, scanActive = false, zxingReader = null;
   function normBarcode(s) { return String(s == null ? '' : s).replace(/\s+/g, '').trim(); }
   function findItemByBarcode(code) {
     code = normBarcode(code);
     if (!code) return null;
     return (DATA.items || []).filter(function (i) { return normBarcode(i.barcode) && normBarcode(i.barcode) === code; })[0] || null;
+  }
+  // ZXing is loaded on demand only when the browser lacks the native BarcodeDetector
+  // (notably iOS Safari / iOS Chrome). Integrity-pinned; two CDNs for resilience.
+  var zxingPromise = null;
+  var ZXING_SRC = ['https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js',
+                   'https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js'];
+  var ZXING_SRI = 'sha384-NyKHkzm0aj4yWFC3Hh4cp1VflBgCLfStVlAK6WJOdXAht/pj6RHbMcZgUj48rcAs';
+  function loadZxing() {
+    if (window.ZXing && window.ZXing.BrowserMultiFormatReader) return Promise.resolve(window.ZXing);
+    if (zxingPromise) return zxingPromise;
+    zxingPromise = new Promise(function (resolve, reject) {
+      var i = 0;
+      (function tryNext() {
+        if (i >= ZXING_SRC.length) { zxingPromise = null; reject(new Error('load failed')); return; }
+        var s = document.createElement('script');
+        s.src = ZXING_SRC[i++]; s.integrity = ZXING_SRI; s.crossOrigin = 'anonymous';
+        s.onload = function () { (window.ZXing && window.ZXing.BrowserMultiFormatReader) ? resolve(window.ZXing) : tryNext(); };
+        s.onerror = function () { try { s.remove(); } catch (e) {} tryNext(); };
+        document.head.appendChild(s);
+      })();
+    });
+    return zxingPromise;
   }
   function startScanner(onResult) {
     scanCb = onResult;
@@ -1188,7 +1210,6 @@
     var camWrap = document.getElementById('scan_camwrap');
     var note = document.getElementById('scan_note');
     var video = document.getElementById('scan_video');
-    var canScanLive = ('BarcodeDetector' in window);
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       camWrap.style.display = 'none';
       note.textContent = 'No camera here. Type or scan the barcode into the box below.';
@@ -1197,22 +1218,41 @@
     }
     camWrap.style.display = 'block';
     note.textContent = 'Starting camera…';
+    if ('BarcodeDetector' in window) startNativeScan(video, note, camWrap);
+    else startZxingScan(video, note, camWrap);
+  }
+  function camFail(note, camWrap, err) {
+    camWrap.style.display = 'none';
+    note.textContent = 'Could not open the camera (' + ((err && err.name) || 'error') + '). Type or scan the barcode below.';
+    setTimeout(function () { document.getElementById('scan_manual').focus(); }, 60);
+  }
+  function startNativeScan(video, note, camWrap) {
     navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
       .then(function (stream) {
+        if (!scanCb) { stream.getTracks().forEach(function (t) { t.stop(); }); return; }  // cancelled
         scanStream = stream; video.srcObject = stream;
         var p = video.play(); if (p && p.catch) p.catch(function () {});
-        if (canScanLive) {
-          try { scanDetector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'codabar', 'itf'] }); }
-          catch (e) { try { scanDetector = new BarcodeDetector(); } catch (e2) { scanDetector = null; } }
-        }
+        try { scanDetector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'codabar', 'itf'] }); }
+        catch (e) { try { scanDetector = new BarcodeDetector(); } catch (e2) { scanDetector = null; } }
         if (scanDetector) { scanActive = true; note.textContent = 'Point the camera at the barcode.'; scanLoop(); }
-        else { note.textContent = "This browser can't read barcodes from the camera. Type or scan into the box below."; }
+        else { startZxingScan(video, note, camWrap); }   // detector unusable — fall back to ZXing
       })
-      .catch(function (err) {
-        camWrap.style.display = 'none';
-        note.textContent = 'Could not open the camera (' + ((err && err.name) || 'error') + '). Type or scan the barcode below.';
-        setTimeout(function () { document.getElementById('scan_manual').focus(); }, 60);
-      });
+      .catch(function (err) { camFail(note, camWrap, err); });
+  }
+  function startZxingScan(video, note, camWrap) {
+    note.textContent = 'Loading the barcode scanner…';
+    loadZxing().then(function (ZX) {
+      if (!scanCb) return;   // cancelled while loading
+      zxingReader = new ZX.BrowserMultiFormatReader();
+      note.textContent = 'Point the camera at the barcode.';
+      zxingReader.decodeFromConstraints({ video: { facingMode: { ideal: 'environment' } }, audio: false }, video, function (result) {
+        if (result && typeof result.getText === 'function') scanResult(result.getText());
+      }).catch(function (e) { camFail(note, camWrap, e); });
+    }).catch(function () {
+      camWrap.style.display = 'none';
+      note.textContent = "Couldn't load the camera scanner (are you offline?). Type or scan the barcode into the box below.";
+      setTimeout(function () { document.getElementById('scan_manual').focus(); }, 60);
+    });
   }
   function scanLoop() {
     if (!scanActive || !scanDetector) return;
@@ -1241,6 +1281,7 @@
     scanActive = false;
     if (scanRAF) { cancelAnimationFrame(scanRAF); scanRAF = null; }
     if (scanStream) { scanStream.getTracks().forEach(function (t) { try { t.stop(); } catch (e) {} }); scanStream = null; }
+    if (zxingReader) { try { zxingReader.reset(); } catch (e) {} zxingReader = null; }
     var video = document.getElementById('scan_video'); if (video) video.srcObject = null;
     scanDetector = null; scanCb = null;
     document.getElementById('scanOverlay').classList.remove('show');

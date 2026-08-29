@@ -104,12 +104,15 @@ That's it — bookmark the Pages URL / add it to your home screen.
   optionally an **expiry date** and **barcode** → **Restock**. (Leaving expiry
   blank keeps the item's current date.)
 - **📷 Barcode scanning** — the **Scan barcode** buttons on Distribute and
-  Restock open the phone camera and read the item's barcode (using the browser's
-  built-in reader where available; on browsers without it, or with no camera,
-  type or scan the code into the box — a USB/Bluetooth barcode scanner works as a
-  keyboard). A known barcode jumps to that item; an unknown one starts a new item
-  with the code saved. Set or change an item's barcode from its **Edit** tab or
-  when adding it in Restock.
+  Restock open the phone camera and read the item's barcode. It works on both
+  **Android** (Chrome/Edge, via the browser's built-in reader) and **iPhone**
+  (Safari/Chrome, via a small scanning engine loaded on demand the first time you
+  scan — so the very first scan needs a moment of internet). If the camera can't
+  be opened or the engine can't load, type or scan the code into the box instead
+  — a USB/Bluetooth barcode scanner works there as a keyboard. A known barcode
+  jumps to that item; an unknown one starts a new item with the code saved. Set
+  or change an item's barcode from its **Edit** tab or when adding it in Restock.
+  (The camera only works over **https** — the GitHub Pages URL already is.)
 - **⏰ Expiry** — every item with a date shows a human-readable countdown
   (e.g. *Expires in 1 yr 2 mo*, *Expires in 28 days*, or *Expired 6 days ago*).
   The top **Near expiry** tile counts items due within 3 months (or already
